@@ -1,4 +1,4 @@
-# {{project-name}} - Readme
+# ts-rest - Readme
 
 ## Contributing & Development
 

@@ -1,7 +1,7 @@
 {
-	"name": "{{project-name}}",
+	"name": "ts-rest",
 	"version": "1.0.0",
-	"description": "{{project-name}}",
+	"description": "ts-rest",
 	"private": "true",
 	"typescript-template": {
 		"base": "1.0.1",
@@ -41,13 +41,13 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/{{project-org}}/{{project-name}}.git"
+		"url": "git+https://github.com/ts-rest/ts-rest.git"
 	},
-	"author": "{{project-org}}",
+	"author": "ts-rest",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/{{project-org}}/{{project-name}}/issues"
+		"url": "https://github.com/ts-rest/ts-rest/issues"
 	},
-	"homepage": "https://github.com/{{project-org}}/{{project-name}}#readme",
+	"homepage": "https://github.com/ts-rest/ts-rest#readme",
 	"keywords": []
 }
