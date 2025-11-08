@@ -1,4 +1,9 @@
-import { ApiRequest, ApiResponse, PutEndpoint } from '../../../src/index';
+import {
+	ApiRequest,
+	ApiResponse,
+	PutEndpoint,
+	NotFoundError,
+} from '../../../src/index';
 import { usersRepo } from './users-repository';
 
 /**
@@ -14,9 +19,8 @@ export class UpdateUserEndpoint extends PutEndpoint {
 		const user = usersRepo[userId];
 
 		if (!user) {
-			return response.status(404).json({
-				error: 'User not found',
-				code: 'NOT_FOUND',
+			throw new NotFoundError('User not found', {
+				details: { userId },
 			});
 		}
 

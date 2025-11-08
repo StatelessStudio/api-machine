@@ -110,9 +110,10 @@ describe('API Server', function () {
 			expect(response.status).toBe(404);
 
 			const data = (await response.json()) as ErrorResponse;
-			expect(data.error).toBe('Endpoint not found');
-			expect(data.code).toBe('NOT_FOUND');
+			expect(data.error).toBe('NotFoundError');
+			expect(data.message).toBe('The requested endpoint does not exist.');
 			expect(data.timestamp).toBeDefined();
+			expect(data.options.details).toBeUndefined();
 		});
 
 		it('should return JSON error responses', async function () {
@@ -126,11 +127,27 @@ describe('API Server', function () {
 			expect(response.status).toBe(500);
 
 			const data = (await response.json()) as ErrorResponse;
-			expect(data.error).toBe('Internal server error');
-			expect(data.code).toBe('INTERNAL_ERROR');
+			expect(data.error).toBe('InternalServerError');
+			expect(data.message).toBe('Internal server error');
 			expect(data.timestamp).toBeDefined();
+			expect(data.options).toBeDefined();
 
 			mockConsole.expectStderrContains('Error: Test error');
+		});
+
+		it('can set headers from HTTPError instances', async function () {
+			const response = await fetch(`${baseUrl}/http-error-with-headers`);
+			expect(response.status).toBe(401);
+
+			// Check that custom headers are set
+			expect(response.headers.get('WWW-Authenticate')).toContain(
+				'TestRealm'
+			);
+			expect(response.headers.get('X-Custom-Header')).toBe('test-value');
+
+			const data = (await response.json()) as ErrorResponse;
+			expect(data.error).toBe('UnauthorizedError');
+			expect(data.message).toBe('Custom auth error');
 		});
 	});
 });

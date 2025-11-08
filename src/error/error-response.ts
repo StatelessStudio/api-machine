@@ -1,5 +1,8 @@
-export class ErrorResponse {
+import { HttpErrorOptions } from './error-options';
+
+export interface ErrorResponse {
 	error: string;
-	code: string;
+	message: string;
 	timestamp: string;
+	options: HttpErrorOptions;
 }

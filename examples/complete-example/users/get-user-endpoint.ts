@@ -1,4 +1,5 @@
 import { ApiRequest, ApiResponse, GetEndpoint } from '../../../src/index';
+import { NotFoundError } from '../../../src/error';
 import { usersRepo } from './users-repository';
 
 /**
@@ -15,11 +16,8 @@ export class GetUserEndpoint extends GetEndpoint {
 		const user = usersRepo[userId];
 
 		if (!user) {
-			return response.status(404).json({
-				error: 'User not found',
-				code: 'NOT_FOUND',
-				timestamp: new Date().toISOString(),
-			});
+			// Throw HTTPError - server will automatically format response
+			throw new NotFoundError('User not found', { details: { userId } });
 		}
 
 		return user;

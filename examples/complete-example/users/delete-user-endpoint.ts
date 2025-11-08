@@ -1,4 +1,9 @@
-import { ApiRequest, ApiResponse, DeleteEndpoint } from '../../../src/index';
+import {
+	ApiRequest,
+	ApiResponse,
+	DeleteEndpoint,
+	NotFoundError,
+} from '../../../src/index';
 import { usersRepo } from './users-repository';
 
 /**
@@ -14,9 +19,8 @@ export class DeleteUserEndpoint extends DeleteEndpoint {
 		const user = usersRepo[userId];
 
 		if (!user) {
-			return response.status(404).json({
-				error: 'User not found',
-				code: 'NOT_FOUND',
+			throw new NotFoundError('User not found', {
+				details: { userId },
 			});
 		}
 

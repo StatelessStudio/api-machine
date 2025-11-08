@@ -4,6 +4,7 @@ import http from 'http';
 
 import { defaultRestServerOptions, RestServerOptions } from './server-options';
 import { ApiRouter } from '../router';
+import { HTTPError, NotFoundError, ErrorResponse } from '../error';
 
 import { LogInterface } from '../log';
 
@@ -74,12 +75,8 @@ export abstract class RestServer {
 	}
 
 	protected async setup404Handler(): Promise<void> {
-		this.app.use((request: express.Request, response: express.Response) => {
-			response.status(404).json({
-				error: 'Endpoint not found',
-				code: 'NOT_FOUND',
-				timestamp: new Date().toISOString(),
-			});
+		this.app.use(() => {
+			throw new NotFoundError('The requested endpoint does not exist.');
 		});
 	}
 
@@ -93,12 +90,26 @@ export abstract class RestServer {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				next: express.NextFunction
 			) => {
+				// Handle HTTPError instances
+				if (error instanceof HTTPError) {
+					// Set custom headers if provided
+					Object.entries(error.headers).forEach(([key, value]) => {
+						response.setHeader(key, value);
+					});
+
+					return response
+						.status(error.getStatusCode())
+						.json(error.getResponseJson());
+				}
+
+				// Handle generic errors
 				this.log?.error('Unhandled error:', error);
 
-				response.status(500).json({
-					error: 'Internal server error',
-					code: 'INTERNAL_ERROR',
+				return response.status(500).json(<ErrorResponse>{
+					error: 'InternalServerError',
+					message: 'Internal server error',
 					timestamp: new Date().toISOString(),
+					options: {},
 				});
 			}
 		);

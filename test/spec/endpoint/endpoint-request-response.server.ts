@@ -5,6 +5,7 @@ import {
 	GetEndpoint,
 	PostEndpoint,
 	DeleteEndpoint,
+	BadRequestError,
 } from '../../../src';
 
 export class RequestResponseRouter extends BaseApiRouter {
@@ -87,12 +88,8 @@ export class RequestResponseRouter extends BaseApiRouter {
 			class extends PostEndpoint {
 				override path = '/validate';
 
-				override async handle(
-					request: ApiRequest,
-					response: ApiResponse
-				) {
-					response.status(400);
-					return { error: 'Invalid data' };
+				override async handle(): Promise<never> {
+					throw new BadRequestError('Invalid data');
 				}
 			},
 

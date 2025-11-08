@@ -217,6 +217,49 @@ class DeleteUserEndpoint extends DeleteEndpoint {
 
 You can also use `BaseApiEndpoint` and manually set the `method` and `statusCode` properties if needed for custom behavior.
 
+## Error Handling
+
+ts-rest provides a comprehensive set of HTTP error classes for standardized error responses. All errors extend `HTTPError` and automatically format responses with proper status codes and headers.
+
+```typescript
+import { NotFoundError, BadRequestError, UnauthorizedError } from 'ts-rest';
+
+class GetUserEndpoint extends GetEndpoint {
+	override path = '/users/:id';
+	
+	async handle(request, response) {
+		const id = parseInt(request.params['id'], 10);
+		const user = await findUser(id);
+		
+		if (!user) {
+			throw new NotFoundError('User not found', {
+				details: { userId: id }
+			});
+		}
+		
+		return user;
+	}
+}
+```
+
+**Key Features:**
+- 29 built-in error classes covering HTTP status codes 400-451
+- Automatic JSON error responses with timestamps
+- Support for custom headers (e.g., `WWW-Authenticate`, `Retry-After`)
+- Optional `details` field for additional context
+- User-provided headers override defaults
+
+**Common Error Classes:**
+- `BadRequestError` (400)
+- `UnauthorizedError` (401) 
+- `ForbiddenError` (403)
+- `NotFoundError` (404)
+- `ConflictError` (409)
+- `UnprocessableEntityError` (422)
+- `TooManyRequestsError` (429)
+
+For the complete list of error classes, usage examples, and custom error creation, see the **[HTTP Errors Documentation](docs/http-errors.md)**.
+
 ## Contributing & Development
 
 See [contributing.md](docs/contributing/contributing.md) for information on how to develop or contribute to this project!
