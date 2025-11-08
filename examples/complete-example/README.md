@@ -65,6 +65,13 @@ curl http://localhost:3000/api/express/headers \
 curl "http://localhost:3000/api/express/search?q=test&page=2&limit=20"
 ```
 
+### Health Check
+
+```bash
+# Check service health
+curl http://localhost:3000/api/health
+```
+
 ## Key Points
 
 ### Domain-Driven Organization

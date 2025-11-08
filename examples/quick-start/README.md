@@ -22,6 +22,9 @@ curl http://localhost:3000/api/hello
 
 # Get a list of users
 curl http://localhost:3000/api/users
+
+# Health check endpoint
+curl http://localhost:3000/api/health
 ```
 
 ## Key Points

@@ -28,6 +28,7 @@ server
 		log.info('Try these endpoints:');
 		log.info('  GET http://localhost:3000/api/hello');
 		log.info('  GET http://localhost:3000/api/users');
+		log.info('  GET http://localhost:3000/api/health');
 	})
 	.catch((error) => {
 		log.error('Error starting server:', error);

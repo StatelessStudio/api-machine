@@ -58,6 +58,9 @@ server
 			'  GET    http://localhost:3000/api/express/search?q=test&page=1'
 		);
 		log.info('');
+		log.info('Health Check:');
+		log.info('  GET    http://localhost:3000/api/health');
+		log.info('');
 		log.info('Error Handling Examples:');
 		log.info(
 			'  GET    http://localhost:3000/api/users/0 (400 Bad Request)'

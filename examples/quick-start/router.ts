@@ -1,4 +1,4 @@
-import { BaseApiRouter } from '../../src/index';
+import { BaseApiRouter, HealthCheckEndpoint } from '../../src/index';
 import { HelloEndpoint } from './endpoints/hello-endpoint';
 import { UsersEndpoint } from './endpoints/users-endpoint';
 
@@ -11,6 +11,6 @@ export class MyRouter extends BaseApiRouter {
 	override path = '/api';
 
 	async routes() {
-		return [HelloEndpoint, UsersEndpoint];
+		return [HelloEndpoint, UsersEndpoint, HealthCheckEndpoint];
 	}
 }

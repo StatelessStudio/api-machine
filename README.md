@@ -225,8 +225,49 @@ class DeleteUserEndpoint extends DeleteEndpoint {
 - `PutEndpoint` - PUT requests (200 OK)
 - `PatchEndpoint` - PATCH requests (200 OK)
 - `DeleteEndpoint` - DELETE requests (204 No Content)
+- `HealthCheckEndpoint` - Pre-built health check endpoint (GET /health)
 
 You can also use `BaseApiEndpoint` and manually set the `method` and `statusCode` properties if needed for custom behavior.
+
+#### Pre-Built Endpoints
+
+##### HealthCheckEndpoint
+
+A ready-to-use health check endpoint that returns system status information. Simply include it in your router:
+
+```typescript
+import { BaseApiRouter, HealthCheckEndpoint } from 'ts-rest';
+
+class MyRouter extends BaseApiRouter {
+	override path = '/api';
+	
+	async routes() {
+		return [
+			HealthCheckEndpoint,  // Available at GET /api/health
+			// ... other endpoints
+		];
+	}
+}
+```
+
+**Response Format:**
+```json
+{
+	"status": "ok",
+	"timestamp": "2025-11-08T12:00:00.000Z",
+	"uptime": 123.45,
+	"environment": "development"
+}
+```
+
+**Customizing the Path:**
+```typescript
+class CustomHealthCheck extends HealthCheckEndpoint {
+	override path = '/status';  // Available at GET /api/status
+}
+```
+
+For advanced usage, extending the health check with custom checks, and deployment examples (Kubernetes, Docker, monitoring), see the **[Health Check Endpoint Documentation](docs/health-check-endpoint.md)**.
 
 ## Error Handling
 

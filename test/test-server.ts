@@ -8,6 +8,8 @@ import { RoutingRouter } from './spec/endpoint/endpoint-routing.server';
 import { RequestResponseRouter } from './spec/endpoint/endpoint-request-response.server';
 // eslint-disable-next-line max-len
 import { QueryParamsRouter } from './spec/endpoint/query-params.server';
+// eslint-disable-next-line max-len
+import { HealthCheckRouter } from './spec/endpoint/health-check.server';
 
 export class TestRouter extends BaseApiRouter {
 	override path = '/test';
@@ -54,6 +56,7 @@ export class TestServer extends RestServer {
 			RoutingRouter,
 			RequestResponseRouter,
 			QueryParamsRouter,
+			HealthCheckRouter,
 		];
 	}
 }
