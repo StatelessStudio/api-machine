@@ -67,6 +67,15 @@ The [`examples/`](examples/) directory contains comprehensive examples:
   - Basic JSON responses
   - Minimal configuration
 
+- **[Complete Example](examples/complete-example/README.md)** - Advanced features and production patterns
+  - Full CRUD operations (GET, POST, PUT, DELETE)
+  - Route parameters and validation
+  - Error handling with proper status codes
+  - Custom logger configuration (ts-tiny-log)
+  - Express integration (headers, query params)
+  - Request body validation
+  - Structured error responses
+
 ## Configuration
 
 ### Server Options
@@ -124,9 +133,89 @@ Abstract class for creating API endpoints.
 
 **Properties:**
 - `path`: The endpoint path (default: `''`)
+- `method`: The HTTP method (default: `GET`). Can be:
+	- `EndpointMethods.GET`
+	- `EndpointMethods.POST`
+	- `EndpointMethods.PATCH`
+	- `EndpointMethods.PUT`
+	- `EndpointMethods.DELETE`
 
 **Methods:**
 - `handle(request, response, next)`: Abstract method to handle requests (must be implemented)
+
+#### Using Different HTTP Methods
+
+ts-rest provides convenience classes for each HTTP method with appropriate default status codes:
+
+```typescript
+// GET endpoint (200 OK by default)
+class GetUsersEndpoint extends GetEndpoint {
+	override path = '/users';
+	
+	async handle(request, response) {
+		return [{ id: 1, name: 'John' }];
+	}
+}
+
+// POST endpoint
+class CreateUserEndpoint extends PostEndpoint {
+	override path = '/users';
+	
+	async handle(request, response) {
+		const newUser = {
+			id: Date.now(),
+			name: request.body.name
+		};
+
+		return newUser;
+	}
+}
+
+// PUT endpoint
+class UpdateUserEndpoint extends PutEndpoint {
+	override path = '/users/:id';
+	
+	async handle(request, response) {
+		const id = parseInt(request.params['id'], 10);
+
+		// Update entire user resource
+		return { id, ...request.body };
+	}
+}
+
+// PATCH endpoint
+class PatchUserEndpoint extends PatchEndpoint {
+	override path = '/users/:id';
+	
+	async handle(request, response) {
+		const id = parseInt(request.params['id'], 10);
+
+		// Update only provided fields
+		return { id, ...request.body };
+	}
+}
+
+// DELETE endpoint (204 No Content by default)
+class DeleteUserEndpoint extends DeleteEndpoint {
+	override path = '/users/:id';
+	
+	async handle(request, response) {
+		const id = parseInt(request.params['id'], 10);
+
+		// Deletion logic here
+		return {};
+	}
+}
+```
+
+**Available Endpoint Classes:**
+- `GetEndpoint` - GET requests (200 OK)
+- `PostEndpoint` - POST requests (201 Created)
+- `PutEndpoint` - PUT requests (200 OK)
+- `PatchEndpoint` - PATCH requests (200 OK)
+- `DeleteEndpoint` - DELETE requests (204 No Content)
+
+You can also use `BaseApiEndpoint` and manually set the `method` and `statusCode` properties if needed for custom behavior.
 
 ## Contributing & Development
 

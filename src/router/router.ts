@@ -1,5 +1,6 @@
 import { Router as ExpressRouter } from 'express';
 import { ApiRoute, BaseApiRoute } from './base';
+import { BaseApiEndpoint, EndpointMethod } from './endpoint';
 
 export abstract class BaseApiRouter extends BaseApiRoute {
 	protected router: ExpressRouter;
@@ -10,9 +11,40 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 		this.router = ExpressRouter();
 		parent.use(this.path, this.router);
 
-		for (const route of await this.routes()) {
-			await new route().register(this.router);
+		const routes = await this.routes();
+
+		// Track which paths have which methods
+		const pathMethods = new Map<string, Set<EndpointMethod>>();
+
+		// First pass: register all endpoints and track their methods
+		for (const route of routes) {
+			const instance = new route();
+			await instance.register(this.router);
+
+			// Track endpoint methods for 405 handling
+			if (instance instanceof BaseApiEndpoint) {
+				const path = instance.path;
+				if (!pathMethods.has(path)) {
+					pathMethods.set(path, new Set());
+				}
+				pathMethods.get(path)!.add(instance.method);
+			}
 		}
+
+		// Second pass: add 405 handlers for unsupported methods
+		const allMethods = Object.values(EndpointMethod);
+		pathMethods.forEach((supportedMethods, path) => {
+			allMethods.forEach((method) => {
+				if (!supportedMethods.has(method)) {
+					this.router[method](path, (req, res) => {
+						res.status(405).send({
+							error: 'Method Not Allowed',
+							message: `Method ${req.method} not allowed`,
+						});
+					});
+				}
+			});
+		});
 	}
 }
 

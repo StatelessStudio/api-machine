@@ -13,11 +13,21 @@ export type ApiNextFunction = ExpressNextFunction;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ApiResponseData = { [key: string]: any } | { [key: string]: any }[];
 
+export enum EndpointMethod {
+	GET = 'get',
+	POST = 'post',
+	PUT = 'put',
+	DELETE = 'delete',
+	PATCH = 'patch',
+}
+
 export abstract class BaseApiEndpoint extends BaseApiRoute {
 	override path = '';
+	public method: EndpointMethod = EndpointMethod.GET;
+	public statusCode: number = 200;
 
 	public override async register(parentRouter: ExpressRouter): Promise<void> {
-		parentRouter.get(this.path, this.handleWrapper.bind(this));
+		parentRouter[this.method](this.path, this.handleWrapper.bind(this));
 	}
 
 	public async handleWrapper(

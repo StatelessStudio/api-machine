@@ -2,21 +2,13 @@ import 'jasmine';
 import { MockConsole } from 'ts-jasmine-spies';
 
 import { env } from '../../env';
-import { server } from './api.server';
+import { server } from '../../test-server';
 import { ErrorResponse } from '../../../src/error';
 import { defaultRestServerOptions } from '../../../src';
 
 describe('API Server', function () {
 	const baseUrl = env.API_URL + '/test';
 	let mockConsole: MockConsole;
-
-	beforeAll(async () => {
-		await server.start();
-	});
-
-	afterAll(async () => {
-		await server.stop();
-	});
 
 	beforeEach(() => {
 		mockConsole = new MockConsole();

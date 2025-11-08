@@ -1,6 +1,10 @@
-import { RestServer } from '../../../src';
-import { BaseApiEndpoint, BaseApiRouter } from '../../../src/router';
-import { env } from '../../env';
+import { RestServer } from '../src';
+import { BaseApiEndpoint, BaseApiRouter } from '../src/router';
+import { env } from './env';
+import { MethodsRouter } from './spec/endpoint/endpoint-methods.server';
+import { RoutingRouter } from './spec/endpoint/endpoint-routing.server';
+// eslint-disable-next-line max-len
+import { RequestResponseRouter } from './spec/endpoint/endpoint-request-response.server';
 
 export class TestRouter extends BaseApiRouter {
 	override path = '/test';
@@ -27,7 +31,12 @@ export class TestRouter extends BaseApiRouter {
 
 export class TestServer extends RestServer {
 	override async routes() {
-		return [TestRouter];
+		return [
+			TestRouter,
+			MethodsRouter,
+			RoutingRouter,
+			RequestResponseRouter,
+		];
 	}
 }
 
