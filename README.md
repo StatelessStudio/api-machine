@@ -13,6 +13,7 @@ npm i ts-rest
 - **TypeScript-First**: Fully typed API development with TypeScript
 - **Class-Based Architecture**: Organize your API with classes for servers, routers, and endpoints
 - **Built on Express**: Leverages the power and ecosystem of Express.js
+- **Secure by Default**: Automatic security headers and server fingerprinting protection
 - **CORS Support**: Built-in CORS handling
 - **Error Handling**: Automatic error handling with standardized responses
 - **Configurable**: Flexible configuration for ports, payload sizes, and logging
@@ -94,6 +95,16 @@ Maximum size in megabytes for URL-encoded request payloads that the server will 
 #### log `LogInterface = console`
 
 Custom logger interface for handling server logging (e.g. `ts-tiny-log`). Must implement the LogInterface contract.
+
+#### securityHeaders `SecurityHeadersOptions`
+
+Configuration for HTTP security headers. By default, ts-rest is **secure by default** with:
+- X-Powered-By header removed (prevents server fingerprinting)
+- X-Content-Type-Options: nosniff (prevents MIME sniffing)
+- X-Frame-Options: DENY (prevents clickjacking)
+- X-XSS-Protection: 1; mode=block (legacy XSS protection)
+
+See **[Security Headers Documentation](docs/security-headers.md)** for detailed configuration options and best practices.
 
 ### Example with Options
 

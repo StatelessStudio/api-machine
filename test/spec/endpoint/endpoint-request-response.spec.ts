@@ -4,6 +4,51 @@ import { env } from '../../env';
 describe('Request and Response Handling', function () {
 	const baseUrl = env.API_URL + '/request-response';
 
+	describe('Global Security Headers', function () {
+		it('should remove X-Powered-By header by default', async function () {
+			const response = await fetch(`${baseUrl}/echo`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({}),
+			});
+
+			expect(response.status).toBe(200);
+			expect(response.headers.get('X-Powered-By')).toBeNull();
+		});
+
+		it('should set global security headers', async function () {
+			const response = await fetch(`${baseUrl}/echo`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({}),
+			});
+
+			expect(response.status).toBe(200);
+
+			// Verify global security headers
+			expect(response.headers.get('X-Content-Type-Options')).toBe(
+				'nosniff'
+			);
+			expect(response.headers.get('X-Frame-Options')).toBe('DENY');
+			expect(response.headers.get('X-XSS-Protection')).toBe(
+				'1; mode=block'
+			);
+		});
+
+		it('should not set HSTS header by default', async function () {
+			const response = await fetch(`${baseUrl}/echo`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({}),
+			});
+
+			expect(response.status).toBe(200);
+			expect(
+				response.headers.get('Strict-Transport-Security')
+			).toBeNull();
+		});
+	});
+
 	describe('Request Body Parsing', function () {
 		it('should parse JSON request body', async function () {
 			const requestBody = {
@@ -185,6 +230,57 @@ describe('Request and Response Handling', function () {
 			const cacheControl = response.headers.get('Cache-Control');
 			expect(cacheControl).toBeDefined();
 			expect(cacheControl).toContain('max-age');
+		});
+
+		it('should set CORS headers', async function () {
+			const response = await fetch(`${baseUrl}/cors-headers`);
+			expect(response.status).toBe(200);
+
+			// Verify CORS headers
+			expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
+				'*'
+			);
+			expect(response.headers.get('Access-Control-Allow-Methods')).toBe(
+				'GET, POST, PUT, DELETE, OPTIONS'
+			);
+			expect(response.headers.get('Access-Control-Allow-Headers')).toBe(
+				'Content-Type, Authorization'
+			);
+			expect(response.headers.get('Access-Control-Max-Age')).toBe(
+				'86400'
+			);
+		});
+
+		it('should set custom content-type header', async function () {
+			const response = await fetch(`${baseUrl}/custom-content-type`);
+			expect(response.status).toBe(200);
+
+			// Verify custom content type is set
+			const contentType = response.headers.get('Content-Type');
+			expect(contentType).toBe('application/vnd.api+json; charset=utf-8');
+		});
+
+		it('should set location header for redirects', async function () {
+			const response = await fetch(`${baseUrl}/redirect-header`, {
+				redirect: 'manual',
+			});
+			expect(response.status).toBe(302);
+
+			// Verify location header
+			expect(response.headers.get('Location')).toBe(
+				'/api/request-response/new-location'
+			);
+		});
+
+		it('should set ETag and Last-Modified headers', async function () {
+			const response = await fetch(`${baseUrl}/cache-validation`);
+			expect(response.status).toBe(200);
+
+			// Verify cache validation headers
+			expect(response.headers.get('ETag')).toBe('"abc123"');
+			expect(response.headers.get('Last-Modified')).toMatch(
+				/^\w{3}, \d{2} \w{3} \d{4} \d{2}:\d{2}:\d{2} GMT$/
+			);
 		});
 	});
 

@@ -1,5 +1,7 @@
 import { BaseApiRouter } from '../../src/index';
 import { UsersRouter } from './users/users-router';
+// eslint-disable-next-line max-len
+import { ExpressFeaturesRouter } from './express-features/express-features-router';
 
 /**
  * Complete Example - API Router
@@ -13,6 +15,6 @@ export class ApiRouter extends BaseApiRouter {
 	override path = '/api';
 
 	async routes() {
-		return [UsersRouter];
+		return [UsersRouter, ExpressFeaturesRouter];
 	}
 }

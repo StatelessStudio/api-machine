@@ -12,6 +12,7 @@ export abstract class RestServer {
 	public readonly port: number;
 	public readonly maxPayloadSizeMB: number;
 	public readonly maxUrlEncodedSizeMB: number;
+	public readonly securityHeaders: RestServerOptions['securityHeaders'];
 
 	protected app: express.Express;
 	protected listener: http.Server;
@@ -24,6 +25,10 @@ export abstract class RestServer {
 		this.maxPayloadSizeMB = options.maxPayloadSizeMB!;
 		this.maxUrlEncodedSizeMB = options.maxUrlEncodedSizeMB!;
 		this.log = options.log!;
+		this.securityHeaders = {
+			...defaultRestServerOptions.securityHeaders,
+			...options.securityHeaders,
+		};
 	}
 
 	public async start() {
@@ -52,9 +57,54 @@ export abstract class RestServer {
 
 	protected async setupExpress(): Promise<void> {
 		this.app = express();
+		await this.setupSecurityHeaders();
 		await this.setupExpressCors();
 		await this.setupExpressJson();
 		await this.setupExpressUrlEncoded();
+	}
+
+	protected async setupSecurityHeaders(): Promise<void> {
+		// Disable X-Powered-By header to prevent server fingerprinting
+		if (this.securityHeaders.disableXPoweredBy) {
+			this.app.disable('x-powered-by');
+		}
+
+		// Add security headers middleware
+		this.app.use(
+			(
+				request: express.Request,
+				response: express.Response,
+				next: express.NextFunction
+			) => {
+				// X-Content-Type-Options: nosniff
+				if (this.securityHeaders.noSniff) {
+					response.setHeader('X-Content-Type-Options', 'nosniff');
+				}
+
+				// X-Frame-Options
+				if (this.securityHeaders.frameOptions) {
+					response.setHeader(
+						'X-Frame-Options',
+						this.securityHeaders.frameOptions
+					);
+				}
+
+				// X-XSS-Protection
+				if (this.securityHeaders.xssProtection) {
+					response.setHeader('X-XSS-Protection', '1; mode=block');
+				}
+
+				// Strict-Transport-Security (HSTS)
+				if (this.securityHeaders.hsts) {
+					const hstsValue =
+						`max-age=${this.securityHeaders.hsts}; ` +
+						'includeSubDomains';
+					response.setHeader('Strict-Transport-Security', hstsValue);
+				}
+
+				next();
+			}
+		);
 	}
 
 	protected async setupExpressCors(): Promise<void> {

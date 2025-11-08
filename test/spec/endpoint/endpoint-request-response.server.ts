@@ -40,6 +40,7 @@ export class RequestResponseRouter extends BaseApiRouter {
 					response: ApiResponse
 				) {
 					response.setHeader('X-Custom-Response', 'test-value');
+					// Override the globally disabled X-Powered-By
 					response.setHeader('X-Powered-By', 'ts-rest');
 					return { message: 'Headers set' };
 				}
@@ -114,6 +115,79 @@ export class RequestResponseRouter extends BaseApiRouter {
 						method: request.method,
 						path: request.path,
 					};
+				}
+			},
+
+			// CORS headers
+			class extends GetEndpoint {
+				override path = '/cors-headers';
+
+				override async handle(
+					request: ApiRequest,
+					response: ApiResponse
+				) {
+					response.setHeader('Access-Control-Allow-Origin', '*');
+					response.setHeader(
+						'Access-Control-Allow-Methods',
+						'GET, POST, PUT, DELETE, OPTIONS'
+					);
+					response.setHeader(
+						'Access-Control-Allow-Headers',
+						'Content-Type, Authorization'
+					);
+					response.setHeader('Access-Control-Max-Age', '86400');
+					return { cors: 'enabled' };
+				}
+			},
+
+			// Custom content type
+			class extends GetEndpoint {
+				override path = '/custom-content-type';
+
+				override async handle(
+					request: ApiRequest,
+					response: ApiResponse
+				) {
+					response.setHeader(
+						'Content-Type',
+						'application/vnd.api+json'
+					);
+					return { data: { type: 'custom' } };
+				}
+			},
+
+			// Redirect with location header
+			class extends GetEndpoint {
+				override path = '/redirect-header';
+
+				override async handle(
+					request: ApiRequest,
+					response: ApiResponse
+				) {
+					response.status(302);
+					response.setHeader(
+						'Location',
+						'/api/request-response/new-location'
+					);
+					return {};
+				}
+			},
+
+			// Cache validation headers
+			class extends GetEndpoint {
+				override path = '/cache-validation';
+
+				override async handle(
+					request: ApiRequest,
+					response: ApiResponse
+				) {
+					const lastModified = new Date('2025-01-01T00:00:00Z');
+					response.setHeader('ETag', '"abc123"');
+					response.setHeader(
+						'Last-Modified',
+						lastModified.toUTCString()
+					);
+					return { data: 'cached content' };
 				}
 			},
 		];
