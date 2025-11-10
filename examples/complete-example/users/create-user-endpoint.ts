@@ -1,5 +1,7 @@
 import { ApiRequest, ApiResponse, PostEndpoint } from '../../../src/index';
 import { usersRepo, User } from './users-repository';
+import { ObjectSanitizer, EmailValidator } from 'valsan';
+import { NameValSan } from './name-valsan';
 
 /**
  * Complete Example - Create User Endpoint (POST)
@@ -8,6 +10,11 @@ import { usersRepo, User } from './users-repository';
  */
 export class CreateUserEndpoint extends PostEndpoint {
 	override path = '/';
+
+	static override body = new ObjectSanitizer({
+		name: new NameValSan(),
+		email: new EmailValidator(),
+	});
 
 	async handle(request: ApiRequest, response: ApiResponse) {
 		const { name, email } = request.body;

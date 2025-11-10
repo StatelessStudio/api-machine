@@ -4,7 +4,11 @@ import {
 	Response as ExpressResponse,
 	NextFunction as ExpressNextFunction,
 } from 'express';
+
+import { ObjectSanitizer } from 'valsan/object-sanitizer';
+
 import { BaseApiRoute } from './base';
+import { validateRequest } from './validation-middleware';
 
 export type ApiRequest = ExpressRequest;
 export type ApiResponse = ExpressResponse;
@@ -26,6 +30,11 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 	public method: EndpointMethod = EndpointMethod.GET;
 	public statusCode: number = 200;
 
+	public static body?: ObjectSanitizer;
+	public static query?: ObjectSanitizer;
+	public static params?: ObjectSanitizer;
+	public static headers?: ObjectSanitizer;
+
 	public override async register(parentRouter: ExpressRouter): Promise<void> {
 		parentRouter[this.method](this.path, this.handleWrapper.bind(this));
 	}
@@ -35,6 +44,9 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 		response: ApiResponse,
 		next: ApiNextFunction
 	): Promise<ApiResponseData> {
+		// Validate request parts (body, query, params, headers)
+		// 	if sanitizers are present
+		await validateRequest(this, request);
 		const data = await this.handle(request, response, next);
 
 		return response.send(data);

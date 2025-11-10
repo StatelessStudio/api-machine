@@ -1,5 +1,10 @@
 import { RestServer } from '../src';
-import { BaseApiEndpoint, BaseApiRouter } from '../src/router';
+import {
+	ApiRequest,
+	BaseApiEndpoint,
+	BaseApiRouter,
+	PostEndpoint,
+} from '../src/router';
 import { UnauthorizedError } from '../src/error';
 import { env } from './env';
 import { MethodsRouter } from './spec/endpoint/endpoint-methods.server';
@@ -10,6 +15,13 @@ import { RequestResponseRouter } from './spec/endpoint/endpoint-request-response
 import { QueryParamsRouter } from './spec/endpoint/query-params.server';
 // eslint-disable-next-line max-len
 import { HealthCheckRouter } from './spec/endpoint/health-check.server';
+import {
+	ObjectSanitizer,
+	ComposedValSan,
+	TrimSanitizer,
+	MinLengthValidator,
+	EmailValidator,
+} from 'valsan';
 
 export class TestRouter extends BaseApiRouter {
 	override path = '/test';
@@ -42,6 +54,23 @@ export class TestRouter extends BaseApiRouter {
 					});
 
 					return {};
+				}
+			},
+			class extends PostEndpoint {
+				override path = '/user-validation';
+
+				static override body = new ObjectSanitizer({
+					name: new ComposedValSan([
+						new TrimSanitizer(),
+						new MinLengthValidator({ minLength: 1 }),
+					]),
+					email: new EmailValidator(),
+				});
+
+				async handle(request: ApiRequest) {
+					const { name, email } = request.body;
+
+					return { name, email };
 				}
 			},
 		];

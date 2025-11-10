@@ -312,6 +312,34 @@ class GetUserEndpoint extends GetEndpoint {
 
 For the complete list of error classes, usage examples, and custom error creation, see the **[HTTP Errors Documentation](docs/http-errors.md)**.
 
+## Validation & Sanitization
+
+ts-rest supports request validation and sanitization using [valsan](https://www.npmjs.com/package/valsan). You can declare static ObjectSanitizer members on your endpoint classes for `body`, `query`, `params`, or `headers`:
+
+```typescript
+import { ObjectSanitizer, EmailValidator } from 'valsan';
+import { NameValSan } from './examples/complete-example/users/name-valsan';
+
+class CreateUserEndpoint extends PostEndpoint {
+  override path = '/users';
+
+  static override body = new ObjectSanitizer({
+    name: new NameValSan(),
+    email: new EmailValidator(),
+  });
+
+  async handle(request, response) {
+    // request.body is validated & sanitized
+    // ...
+  }
+}
+```
+
+- If validation fails, a 400 error is returned with details.
+- If validation succeeds, the sanitized values are available in `request.body`, `request.query`, etc.
+
+You can create custom validators by extending `ComposedValSan` from valsan. See the [valsan documentation](../valsan/README.md) for more details.
+
 ## Contributing & Development
 
 See [contributing.md](docs/contributing/contributing.md) for information on how to develop or contribute to this project!

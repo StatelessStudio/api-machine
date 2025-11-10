@@ -1,9 +1,4 @@
-import {
-	ApiRequest,
-	ApiResponse,
-	PutEndpoint,
-	NotFoundError,
-} from '../../../src/index';
+import { ApiRequest, PutEndpoint, NotFoundError } from '../../../src/index';
 import { usersRepo } from './users-repository';
 
 /**
@@ -14,7 +9,7 @@ import { usersRepo } from './users-repository';
 export class UpdateUserEndpoint extends PutEndpoint {
 	override path = '/:id';
 
-	async handle(request: ApiRequest, response: ApiResponse) {
+	async handle(request: ApiRequest) {
 		const userId = parseInt(request.params['id'], 10);
 		const user = usersRepo[userId];
 
