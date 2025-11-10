@@ -22,6 +22,7 @@ import {
 	MinLengthValidator,
 	EmailValidator,
 } from 'valsan';
+import { MiddlewareRouter } from './spec/router/middleware.server';
 
 export class TestRouter extends BaseApiRouter {
 	override path = '/test';
@@ -86,6 +87,7 @@ export class TestServer extends RestServer {
 			RequestResponseRouter,
 			QueryParamsRouter,
 			HealthCheckRouter,
+			MiddlewareRouter,
 		];
 	}
 }

@@ -340,6 +340,10 @@ class CreateUserEndpoint extends PostEndpoint {
 
 You can create custom validators by extending `ComposedValSan` from valsan. See the [valsan documentation](../valsan/README.md) for more details.
 
+## Middleware
+
+Routers and endpoints support Express-style middleware for authentication, logging, validation, and more. See [Middleware Support](docs/middleware.md) for usage and examples.
+
 ## Contributing & Development
 
 See [contributing.md](docs/contributing/contributing.md) for information on how to develop or contribute to this project!

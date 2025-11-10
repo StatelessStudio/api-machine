@@ -9,7 +9,14 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 
 	public async register(parent: ExpressRouter): Promise<void> {
 		this.router = ExpressRouter();
-		parent.use(this.path, this.router);
+
+		// Register router-level middleware if any
+		if (this.middleware && this.middleware.length > 0) {
+			parent.use(this.path, ...this.middleware, this.router);
+		}
+		else {
+			parent.use(this.path, this.router);
+		}
 
 		const routes = await this.routes();
 
