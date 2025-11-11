@@ -23,6 +23,7 @@ import {
 	EmailValidator,
 } from 'valsan';
 import { MiddlewareRouter } from './spec/router/middleware.server';
+import { ProtectedRouter } from './spec/authentication/authentication.server';
 
 export class TestRouter extends BaseApiRouter {
 	override path = '/test';
@@ -88,6 +89,7 @@ export class TestServer extends RestServer {
 			QueryParamsRouter,
 			HealthCheckRouter,
 			MiddlewareRouter,
+			ProtectedRouter,
 		];
 	}
 }
