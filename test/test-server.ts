@@ -34,6 +34,13 @@ export class TestRouter extends BaseApiRouter {
 				}
 			},
 			class extends BaseApiEndpoint {
+				override path = 'no-leading-slash';
+
+				override async handle() {
+					return { works: true };
+				}
+			},
+			class extends BaseApiEndpoint {
 				override path = '/http-error-with-headers';
 
 				override async handle() {
@@ -51,10 +58,25 @@ export class TestRouter extends BaseApiRouter {
 	}
 }
 
+export class TestRouterWithoutLeadingSlash extends BaseApiRouter {
+	override path = 'test-without-leading-slash';
+
+	override async routes() {
+		return [
+			class extends BaseApiEndpoint {
+				override async handle() {
+					return { works: true };
+				}
+			},
+		];
+	}
+}
+
 export class TestServer extends RestServer {
 	override async routes() {
 		return [
 			TestRouter,
+			TestRouterWithoutLeadingSlash,
 			MethodsRouter,
 			RoutingRouter,
 			RequestResponseRouter,

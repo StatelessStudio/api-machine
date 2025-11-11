@@ -150,5 +150,19 @@ describe('Endpoint Routing', function () {
 			expect([200, 301, 404]).toContain(withSlash.status);
 			expect(withoutSlash.status).toBe(200);
 		});
+
+		it('should handle router without leading slash', async function () {
+			const response = await fetch(
+				env.API_URL + '/test-without-leading-slash/'
+			);
+			expect(response.status).toBe(200);
+		});
+
+		it('should handle endpoint without leading slash', async function () {
+			const response = await fetch(
+				env.API_URL + '/test/no-leading-slash'
+			);
+			expect(response.status).toBe(200);
+		});
 	});
 });
