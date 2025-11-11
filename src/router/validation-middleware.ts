@@ -33,7 +33,18 @@ export async function validateRequest(
 		const sanitizer = (endpoint.constructor as any)[part];
 
 		if (sanitizer instanceof ObjectSanitizer) {
-			request[part] = await runSanitizer(sanitizer, request[part]);
+			const sanitized = await runSanitizer(sanitizer, request[part]);
+
+			if (part === 'query') {
+				// Mutate the query object instead of reassigning
+				Object.keys(request.query).forEach((key) => {
+					delete request.query[key];
+				});
+				Object.assign(request.query, sanitized);
+			}
+			else {
+				request[part] = sanitized;
+			}
 		}
 	}
 }
