@@ -9,9 +9,7 @@ import { Log } from 'ts-tiny-log';
  * Demonstrates server options including custom logging.
  */
 export class MyServer extends RestServer {
-	protected async routes() {
-		return [ApiRouter];
-	}
+	override router = ApiRouter;
 }
 
 // Create a custom logger instance

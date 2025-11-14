@@ -24,12 +24,14 @@ See the [Quick Start Example](examples/quick-start/) for a complete, runnable ex
 
 Here's the basic structure:
 
-### 1. Servers
+### 1. Endpoints
 
 ```typescript
-class MyApiServer extends RestServer {
-	override async routes() {
-		return [MyRouter];
+class HelloEndpoint extends BaseApiEndpoint {
+	override path = '/hello';
+
+	override async handle(request, response) {
+		return { message: 'Hello, World!' };
 	}
 }
 ```
@@ -41,20 +43,16 @@ class MyRouter extends BaseApiRouter {
 	override path = '/api';
 
 	override async routes() {
-		return [HelloEndpoint, UsersEndpoint];
+		return [HelloEndpoint, UsersRouter];
 	}
 }
 ```
 
-### 3. Endpoints
+### 3. Servers
 
 ```typescript
-class HelloEndpoint extends BaseApiEndpoint {
-	override path = '/hello';
-
-	override async handle(request, response) {
-		return { message: 'Hello, World!' };
-	}
+class MyApiServer extends RestServer {
+	override router = MyRouter;
 }
 ```
 
@@ -126,7 +124,7 @@ Abstract class for creating REST API servers.
 **Methods:**
 - `start()`: Starts the server
 - `stop()`: Stops the server
-- `routes()`: Abstract method to define routers (must be implemented)
+
 
 ### BaseApiRouter
 

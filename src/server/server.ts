@@ -9,6 +9,7 @@ import { HTTPError, NotFoundError, ErrorResponse } from '../error';
 import { LogInterface } from '../log';
 
 export abstract class RestServer {
+	public router: ApiRouter;
 	public readonly port: number;
 	public readonly maxPayloadSizeMB: number;
 	public readonly maxUrlEncodedSizeMB: number;
@@ -46,14 +47,9 @@ export abstract class RestServer {
 	}
 
 	protected async registerRoutes(): Promise<void> {
-		const routes = await this.routes();
-
-		await Promise.all(
-			routes.map(async (route) => new route().register(this.app))
-		);
+		const router = new this.router();
+		await router.register(this.app, '');
 	}
-
-	protected abstract routes(): Promise<ApiRouter[]>;
 
 	protected async setupExpress(): Promise<void> {
 		this.app = express();

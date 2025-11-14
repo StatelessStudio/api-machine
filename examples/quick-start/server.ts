@@ -7,7 +7,5 @@ import { MyRouter } from './router';
  * This is the main server class that defines which routers to use.
  */
 export class MyApiServer extends RestServer {
-	protected async routes() {
-		return [MyRouter];
-	}
+	override router = MyRouter;
 }

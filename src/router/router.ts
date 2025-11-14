@@ -5,11 +5,15 @@ import { BaseApiEndpoint, EndpointMethod } from './endpoint';
 export abstract class BaseApiRouter extends BaseApiRoute {
 	protected router: ExpressRouter;
 
-	public abstract routes(): Promise<ApiRoute[]>;
+	public registeredRoutes: BaseApiRoute[] = [];
+	protected abstract routes(): Promise<ApiRoute[]>;
 
-	public async register(parent: ExpressRouter): Promise<void> {
+	public async register(
+		parent: ExpressRouter,
+		parentPath: string
+	): Promise<void> {
 		this.router = ExpressRouter();
-		this.registerRoutePath();
+		this.registerRoutePath(parentPath);
 
 		// Register router-level middleware if any
 		if (this.middleware && this.middleware.length > 0) {
@@ -27,7 +31,7 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 		// First pass: register all endpoints and track their methods
 		for (const route of routes) {
 			const instance = new route();
-			await instance.register(this.router);
+			await instance.register(this.router, this.fullPath);
 
 			// Track endpoint methods for 405 handling
 			if (instance instanceof BaseApiEndpoint) {

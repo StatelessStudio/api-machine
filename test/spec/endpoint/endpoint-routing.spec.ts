@@ -164,5 +164,15 @@ describe('Endpoint Routing', function () {
 			);
 			expect(response.status).toBe(200);
 		});
+
+		it('should provide correct fullPath in endpoint', async function () {
+			const response = await fetch(env.API_URL + '/test/full-path');
+			const { fullPath } = (await response.json()) as {
+				fullPath: string;
+			};
+
+			expect(fullPath).toBe('/test/full-path');
+			expect(response.status).toBe(200);
+		});
 	});
 });

@@ -41,6 +41,13 @@ export class TestRouter extends BaseApiRouter {
 				}
 			},
 			class extends BaseApiEndpoint {
+				override path = '/full-path';
+
+				override async handle() {
+					return { fullPath: this.fullPath };
+				}
+			},
+			class extends BaseApiEndpoint {
 				override path = '/http-error-with-headers';
 
 				override async handle() {
@@ -72,7 +79,9 @@ export class TestRouterWithoutLeadingSlash extends BaseApiRouter {
 	}
 }
 
-export class TestServer extends RestServer {
+export class MainRouter extends BaseApiRouter {
+	override path = '/';
+
 	override async routes() {
 		return [
 			TestRouter,
@@ -87,6 +96,10 @@ export class TestServer extends RestServer {
 			ValidationRouter,
 		];
 	}
+}
+
+export class TestServer extends RestServer {
+	public override router = MainRouter;
 }
 
 export const server = new TestServer({

@@ -35,8 +35,11 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 	public static params?: ObjectSanitizer;
 	public static headers?: ObjectSanitizer;
 
-	public override async register(parentRouter: ExpressRouter): Promise<void> {
-		this.registerRoutePath();
+	public override async register(
+		parentRouter: ExpressRouter,
+		parentPath: string
+	): Promise<void> {
+		this.registerRoutePath(parentPath);
 
 		// Register with middleware (if any) before the handler
 		if (this.middleware && this.middleware.length > 0) {

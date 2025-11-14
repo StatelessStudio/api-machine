@@ -18,9 +18,7 @@ describe('Security Headers Configuration', function () {
 	}
 
 	class SecureServer extends RestServer {
-		override async routes() {
-			return [TestRouter];
-		}
+		override router = TestRouter;
 	}
 
 	describe('Default Security (Secure by Default)', function () {
