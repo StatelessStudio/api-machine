@@ -31,6 +31,8 @@ const emailValidator = (isOptional: boolean = false) =>
  */
 const usersDb: Record<string, { id: string; name: string; email: string }> = {};
 
+const userNotFoundError = new NotFoundError('User not found');
+
 class CreateUserEndpoint extends PostEndpoint {
 	override path = '/users';
 	override description = 'Creates a new user';
@@ -56,6 +58,13 @@ class CreateUserEndpoint extends PostEndpoint {
 class GetUserEndpoint extends GetEndpoint {
 	override path = '/users/:id';
 
+	override getErrors() {
+		return {
+			...super.getErrors(),
+			not_found: userNotFoundError,
+		};
+	}
+
 	static override params = new ObjectSanitizer({
 		id: idValidator(),
 	});
@@ -75,7 +84,7 @@ class GetUserEndpoint extends GetEndpoint {
 		const user = usersDb[request.params['id']];
 
 		if (!user) {
-			throw new NotFoundError('User not found');
+			throw this.getErrors().not_found;
 		}
 
 		return user;
@@ -118,9 +127,16 @@ class UpdateUserEndpoint extends PatchEndpoint {
 		name: 'Updated Name',
 	};
 
+	override getErrors() {
+		return {
+			...super.getErrors(),
+			not_found: userNotFoundError,
+		};
+	}
+
 	async handle(request: ApiRequest) {
 		if (!usersDb[request.params['id']]) {
-			throw new NotFoundError('User not found');
+			throw this.getErrors().not_found;
 		}
 
 		const filteredBody = Object.fromEntries(
@@ -141,10 +157,18 @@ class DeleteUserEndpoint extends DeleteEndpoint {
 	override path = '/users/:id';
 	static override params = GetUserEndpoint.params;
 
+	override getErrors() {
+		return {
+			...super.getErrors(),
+			not_found: userNotFoundError,
+		};
+	}
+
 	async handle(request: ApiRequest) {
 		const deleted = usersDb[request.params['id']];
+
 		if (!deleted) {
-			throw new NotFoundError('User not found');
+			throw this.getErrors().not_found;
 		}
 
 		delete usersDb[request.params['id']];
@@ -174,6 +198,8 @@ class UserRouter extends BaseApiRouter {
 const postsDb: Record<string, { id: string; title: string; content: string }> =
 	{};
 
+const postNotFoundError = new NotFoundError('Post not found');
+
 class CreatePostEndpoint extends PostEndpoint {
 	override path = '/posts';
 
@@ -197,11 +223,18 @@ class GetPostEndpoint extends GetEndpoint {
 		id: new LengthValidator({ minLength: 1, maxLength: 50 }),
 	});
 
+	override getErrors() {
+		return {
+			...super.getErrors(),
+			not_found: postNotFoundError,
+		};
+	}
+
 	async handle(request: ApiRequest) {
 		const post = postsDb[request.params['id']];
 
 		if (!post) {
-			throw new NotFoundError('Post not found');
+			throw this.getErrors().not_found;
 		}
 
 		return post;
@@ -221,9 +254,16 @@ class UpdatePostEndpoint extends PutEndpoint {
 	static override params = GetPostEndpoint.params;
 	static override body = CreatePostEndpoint.body;
 
+	override getErrors() {
+		return {
+			...super.getErrors(),
+			not_found: postNotFoundError,
+		};
+	}
+
 	async handle(request: ApiRequest) {
 		if (!postsDb[request.params['id']]) {
-			throw new NotFoundError('Post not found');
+			throw this.getErrors().not_found;
 		}
 
 		postsDb[request.params['id']] = {
@@ -240,11 +280,23 @@ class DeletePostEndpoint extends DeleteEndpoint {
 
 	static override params = GetPostEndpoint.params;
 
+	override getErrors() {
+		return {
+			...super.getErrors(),
+			not_found: postNotFoundError,
+		};
+	}
+
 	async handle(request: ApiRequest) {
 		const deleted = postsDb[request.params['id']];
+
+		if (!deleted) {
+			throw this.getErrors().not_found;
+		}
+
 		delete postsDb[request.params['id']];
 
-		return deleted ? { deleted } : { error: 'Not found' };
+		return {};
 	}
 }
 

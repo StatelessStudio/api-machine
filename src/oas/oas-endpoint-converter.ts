@@ -56,6 +56,18 @@ export class OasEndpointConverter {
 		// Use statusCode for response
 		const status = endpoint.statusCode;
 
+		const responses = {
+			[status]: { description: 'Success' },
+		};
+
+		const errors = endpoint.getErrors();
+		for (const error in errors) {
+			const httpError = errors[error];
+			responses[httpError.getStatusCode()] = {
+				description: httpError.message || 'Error response',
+			};
+		}
+
 		return {
 			[endpoint.method]: <PathItemObject>{
 				summary: endpoint.getName(),
@@ -64,11 +76,7 @@ export class OasEndpointConverter {
 				parameters:
 					this.parameters.length > 0 ? this.parameters : undefined,
 				requestBody,
-				responses: {
-					[status]: {
-						description: 'Successful response',
-					},
-				},
+				responses,
 			},
 		};
 	}
@@ -80,6 +88,7 @@ export class OasEndpointConverter {
 	}: {
 		location: 'path' | 'query' | 'header';
 		sanitizer?: ObjectSanitizer;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		example?: any;
 	}) {
 		if (sanitizer && sanitizer.schema) {
