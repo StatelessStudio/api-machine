@@ -7,6 +7,7 @@ import {
 
 import { BaseApiEndpoint } from '../router';
 import { buildParameter } from 'auto-oas/auto-oas';
+import { AuthenticationScheme } from '../authentication/authentication-scheme';
 
 /**
  * Returns OpenAPI path item for an endpoint,
@@ -15,7 +16,10 @@ import { buildParameter } from 'auto-oas/auto-oas';
 export class OasEndpointConverter {
 	protected parameters: ParameterObject[] = [];
 
-	public getOpenApiPath(endpoint: BaseApiEndpoint): PathItemObject {
+	public getOpenApiPath(
+		endpoint: BaseApiEndpoint,
+		authentication?: AuthenticationScheme | null
+	): PathItemObject {
 		this.addParams({
 			location: 'path',
 			sanitizer: endpoint.getParamsSanitizer(),
@@ -68,6 +72,16 @@ export class OasEndpointConverter {
 			};
 		}
 
+		// Add security requirement if authentication is present
+		// null means explicitly public (no auth),
+		// undefined inherited from parent
+		const security =
+			authentication !== undefined && authentication !== null
+				? [authentication.getSecurityRequirement()]
+				: authentication === null
+					? []
+					: undefined;
+
 		return {
 			[endpoint.method]: <PathItemObject>{
 				summary: endpoint.getName(),
@@ -77,6 +91,7 @@ export class OasEndpointConverter {
 					this.parameters.length > 0 ? this.parameters : undefined,
 				requestBody,
 				responses,
+				security,
 			},
 		};
 	}

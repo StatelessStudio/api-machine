@@ -13,6 +13,7 @@ import {
 // This endpoint inherits server-level authentication
 class ProtectedEndpoint extends BaseApiEndpoint {
 	override path = '/protected';
+	override description = 'The token is: "valid-token-123"';
 
 	async handle() {
 		return {
@@ -24,6 +25,7 @@ class ProtectedEndpoint extends BaseApiEndpoint {
 
 class PublicEndpoint extends BaseApiEndpoint {
 	override path = '/info';
+	override description = 'This endpoint is public - no authentication needed';
 
 	async handle() {
 		return {
@@ -37,14 +39,18 @@ class PublicEndpoint extends BaseApiEndpoint {
 class PublicRouter extends BaseApiRouter {
 	override path = '/public';
 	override authentication = null; // Explicitly public - overrides server auth
+	override description = 'Public routes - no authentication required';
 
 	async routes() {
 		return [PublicEndpoint];
 	}
 }
 
-class AdminEndpoint extends BaseApiEndpoint {
+class AdminDashboardEndpoint extends BaseApiEndpoint {
 	override path = '/dashboard';
+	override description =
+		'Admin dashboard - requires AdminAuth. ' +
+		'The token is: "admin-token-456"';
 
 	async handle() {
 		return {
@@ -57,6 +63,9 @@ class AdminEndpoint extends BaseApiEndpoint {
 // Endpoint with even more restrictive authentication
 class SuperAdminEndpoint extends BaseApiEndpoint {
 	override path = '/super-admin';
+	override description =
+		'Super admin area - requires SuperAdminAuth. ' +
+		'The token is: "super-admin-token-789"';
 
 	// Endpoint-level override for super admin
 	override authentication = new BearerAuthenticationScheme({
@@ -70,7 +79,7 @@ class SuperAdminEndpoint extends BaseApiEndpoint {
 
 	async handle() {
 		return {
-			message: 'Super admin area - requires SuperAdminAuth',
+			message: 'Super admin area - requires SuperAdminAuth.',
 			role: 'super-admin',
 		};
 	}
@@ -92,7 +101,7 @@ class AdminRouter extends BaseApiRouter {
 	});
 
 	async routes() {
-		return [AdminEndpoint, SuperAdminEndpoint];
+		return [AdminDashboardEndpoint, SuperAdminEndpoint];
 	}
 }
 
