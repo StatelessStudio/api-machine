@@ -348,9 +348,35 @@ class CreateUserEndpoint extends PostEndpoint {
 
 You can create custom validators by extending `ComposedValSan` from valsan. See the [valsan documentation](../valsan/README.md) for more details.
 
+## Authentication
+
+ts-rest provides a declarative authentication system with cascading support across server, router, and endpoint levels:
+
+```typescript
+class SecureRouter extends BaseApiRouter {
+  override path = '/api';
+  override authentication = new BearerAuthenticationScheme({
+    checkToken: async (token: string) => await validateToken(token),
+  });
+  
+  async routes() {
+    return [ProtectedEndpoint];
+  }
+}
+```
+
+**Key Features:**
+- **Cascading authentication** - Server → Router → Endpoint priority
+- **Bearer token support** - Built-in Bearer authentication scheme
+- **OpenAPI integration** - Automatic security scheme generation
+- **Public routes** - Set `authentication = null` to bypass parent auth
+- **Custom schemes** - Extend `AuthenticationScheme` for custom auth
+
+See **[Authentication Documentation](docs/authentication.md)** for complete usage, cascading examples, and custom authentication schemes.
+
 ## Middleware
 
-Routers and endpoints support Express-style middleware for authentication, logging, validation, and more. See [Middleware Support](docs/middleware.md) for usage and examples.
+Routers and endpoints support Express-style middleware for logging, validation, and more. See [Middleware Support](docs/middleware.md) for usage and examples.
 
 ## Contributing & Development
 

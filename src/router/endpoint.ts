@@ -90,11 +90,21 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 
 		this.registerRoutePath(parentPath);
 
+		// Collect middleware including authentication
+		const endpointMiddleware = [...this.middleware];
+
+		// Add authentication middleware based on effective authentication
+		// This implements the cascading: endpoint → router → server
+		const effectiveAuth = this.getEffectiveAuthentication();
+		if (effectiveAuth) {
+			endpointMiddleware.push(effectiveAuth.getMiddleware());
+		}
+
 		// Register with middleware (if any) before the handler
-		if (this.middleware && this.middleware.length > 0) {
+		if (endpointMiddleware.length > 0) {
 			parentRouter[this.method](
 				this.path,
-				...this.middleware,
+				...endpointMiddleware,
 				this.handleWrapper.bind(this)
 			);
 		}

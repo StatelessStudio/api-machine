@@ -1,4 +1,5 @@
 import { LogInterface } from '../log';
+import { AuthenticationScheme } from '../authentication/authentication-scheme';
 
 export interface SecurityHeadersOptions {
 	/**
@@ -41,6 +42,12 @@ export interface RestServerOptions {
 	log: LogInterface;
 	securityHeaders: SecurityHeadersOptions;
 	swaggerEnabled?: boolean;
+
+	/**
+	 * Server-level authentication scheme
+	 * This will be applied to all routers and endpoints unless overridden
+	 */
+	authentication?: AuthenticationScheme;
 }
 
 export const defaultSecurityHeadersOptions: SecurityHeadersOptions = {

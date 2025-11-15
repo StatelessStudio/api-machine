@@ -20,9 +20,13 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 		this.router = ExpressRouter();
 		this.registerRoutePath(parentPath);
 
-		// Register router-level middleware if any
-		if (this.middleware && this.middleware.length > 0) {
-			parent.use(this.path, ...this.middleware, this.router);
+		// Collect non-authentication middleware
+		// Authentication is handled at the endpoint level to allow overrides
+		const middlewareWithoutAuth = [...this.middleware];
+
+		// Register router with non-auth middleware if any
+		if (middlewareWithoutAuth.length > 0) {
+			parent.use(this.path, ...middlewareWithoutAuth, this.router);
 		}
 		else {
 			parent.use(this.path, this.router);
@@ -37,6 +41,9 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 		// First pass: register all endpoints and track their methods
 		for (const route of routes) {
 			const instance = new route();
+
+			// Set parent relationship for authentication cascading
+			instance.parentRoute = this;
 
 			if (instance instanceof BaseApiEndpoint) {
 				instance.tag = tag;

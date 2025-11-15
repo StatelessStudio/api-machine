@@ -5,6 +5,7 @@ import http from 'http';
 import { defaultRestServerOptions, RestServerOptions } from './server-options';
 import { ApiRouter, BaseApiRouter } from '../router';
 import { HTTPError, NotFoundError, ErrorResponse } from '../error';
+import { AuthenticationScheme } from '../authentication/authentication-scheme';
 
 import { LogInterface } from '../log';
 import { oasRoutes } from '../oas/routes';
@@ -22,6 +23,7 @@ export abstract class RestServer {
 	public readonly maxUrlEncodedSizeMB: number;
 	public readonly securityHeaders: RestServerOptions['securityHeaders'];
 	public swaggerEnabled = false;
+	public authentication?: AuthenticationScheme;
 
 	protected app: express.Express;
 	protected listener: http.Server;
@@ -39,10 +41,13 @@ export abstract class RestServer {
 			...options.securityHeaders,
 		};
 		this.swaggerEnabled = options.swaggerEnabled ?? false;
+		this.authentication = options.authentication;
 	}
 
 	public async start() {
 		await this.setupExpress();
+		await this.createRouter();
+		await this.registerAuthentication();
 		await this.registerRoutes();
 		await this.registerSwagger();
 		await this.setup404Handler();
@@ -56,8 +61,21 @@ export abstract class RestServer {
 		}
 	}
 
-	protected async registerRoutes(): Promise<void> {
+	protected async createRouter(): Promise<void> {
 		this.routerInstance = new this.router();
+	}
+
+	protected async registerAuthentication(): Promise<void> {
+		// Set server authentication on router instance if not already set
+		if (
+			this.authentication &&
+			this.routerInstance.authentication === undefined
+		) {
+			this.routerInstance.authentication = this.authentication;
+		}
+	}
+
+	protected async registerRoutes(): Promise<void> {
 		await this.routerInstance.register(this.app, '');
 	}
 
