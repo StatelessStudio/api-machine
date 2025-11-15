@@ -22,9 +22,11 @@
 		"publish": "npm run script -- publish"
 	},
 	"dependencies": {
+		"auto-oas": "^1.2.0",
 		"cors": "^2.8.5",
 		"express": "^5.1.0",
-		"valsan": "^1.1.1"
+		"swagger-ui-express": "^5.0.1",
+		"valsan": "^2.1.0"
 	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
@@ -32,6 +34,7 @@
 		"@types/express": "^5.0.5",
 		"@types/jasmine": "^5.1.4",
 		"@types/node": "^18.19.39",
+		"@types/swagger-ui-express": "^4.1.8",
 		"@typescript-eslint/eslint-plugin": "^7.13.1",
 		"eslint": "^8.57.0",
 		"jasmine": "^5.1.0",

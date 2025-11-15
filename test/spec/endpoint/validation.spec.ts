@@ -93,14 +93,14 @@ describe('Validation', function () {
 		expect(details.length).toBe(2);
 
 		expect(details[0].field).toBe('name');
-		expect(details[0].code).toBe('STRING_TOO_SHORT');
+		expect(details[0].code).toBe('string_min_len');
 		expect(details[0].message).toBe(
 			'Input must be at least 1 character(s)'
 		);
-		expect(details[0].context).toEqual({ minLength: 1, actualLength: 0 });
+		expect(details[0].context).toEqual({ minLength: 1 });
 
 		expect(details[1].field).toBe('email');
-		expect(details[1].code).toBe('STRING_EMAIL_INVALID');
+		expect(details[1].code).toBe('email_format');
 		expect(details[1].message).toBe('Input is not a valid email address');
 	});
 

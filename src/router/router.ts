@@ -7,6 +7,11 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 
 	public registeredRoutes: BaseApiRoute[] = [];
 	protected abstract routes(): Promise<ApiRoute[]>;
+	protected routeInstances: { [key: string]: BaseApiRoute } = {};
+
+	public getTag(): string {
+		return this.name || this.constructor.name.replace(/Router$/, '');
+	}
 
 	public async register(
 		parent: ExpressRouter,
@@ -27,18 +32,28 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 
 		// Track which paths have which methods
 		const pathMethods = new Map<string, Set<EndpointMethod>>();
+		const tag = this.getTag();
 
 		// First pass: register all endpoints and track their methods
 		for (const route of routes) {
 			const instance = new route();
+
+			if (instance instanceof BaseApiEndpoint) {
+				instance.tag = tag;
+			}
+
 			await instance.register(this.router, this.fullPath);
+
+			this.registeredRoutes.push(instance);
 
 			// Track endpoint methods for 405 handling
 			if (instance instanceof BaseApiEndpoint) {
 				const path = instance.path;
+
 				if (!pathMethods.has(path)) {
 					pathMethods.set(path, new Set());
 				}
+
 				pathMethods.get(path)!.add(instance.method);
 			}
 		}

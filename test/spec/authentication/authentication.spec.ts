@@ -46,10 +46,8 @@ describe('Authentication Middleware', function () {
 			mockConsole.expectStderrContains(
 				'Unauthorized access attempt from ::1 - Invalid token format'
 			);
-			mockConsole.expectStderrContains('"code": "INVALID_BEARER_TOKEN",');
-			mockConsole.expectStderrContains(
-				'"message": "Token must contain Bearer prefix and token'
-			);
+			mockConsole.expectStderrContains('"code": "bearer_prefix",');
+			mockConsole.expectStderrContains('"message": "Missing login token');
 		});
 
 		it('should reject empty Authorization', async function () {

@@ -47,10 +47,11 @@ module.exports = {
 	},
 	overrides: [
 		{
-			files: ["examples/**/*.ts"],
+			files: ["examples/**/*.ts", "scripts/**/*.ts"],
 			rules: {
 				"@typescript-eslint/no-unused-vars": [1, { "argsIgnorePattern": "request|response" }],
+				"no-console": 0
 			}
-		}
+		},
 	]
 };

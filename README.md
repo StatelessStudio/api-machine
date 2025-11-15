@@ -11,6 +11,7 @@ npm i ts-rest
 ## Features
 
 - **TypeScript-First**: Fully typed API development with TypeScript
+- **Self-documenting** - Automatically hosts Swagger & OpenAPI (when enabled)
 - **Class-Based Architecture**: Organize your API with classes for servers, routers, and endpoints
 - **Built on Express**: Leverages the power and ecosystem of Express.js
 - **Secure by Default**: Automatic security headers and server fingerprinting protection
@@ -54,7 +55,16 @@ class MyRouter extends BaseApiRouter {
 class MyApiServer extends RestServer {
 	override router = MyRouter;
 }
+
+const server = new MyApiServer({
+	port: 4000,
+	swaggerEnabled: process.env?.NODE_ENV === 'development'
+})
 ```
+
+### Swagger
+
+Navigate to http://localhost:4000/docs to browse your swagger API docs
 
 ## Examples
 

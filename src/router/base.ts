@@ -3,6 +3,8 @@ import { Router as ExpressRouter, RequestHandler } from 'express';
 export abstract class BaseApiRoute {
 	public path: string;
 	public fullPath: string;
+	public name: string;
+	public description?: string;
 
 	/**
 	 * Optional array of Express middleware to apply
@@ -13,6 +15,10 @@ export abstract class BaseApiRoute {
 		parentRouter: ExpressRouter,
 		parentPath: string
 	): Promise<void>;
+
+	public getName(): string {
+		return this.name || this.constructor.name;
+	}
 
 	public registerRoutePath(parentPath: string): void {
 		if (!this.path) {

@@ -40,6 +40,7 @@ export interface RestServerOptions {
 	maxUrlEncodedSizeMB: number;
 	log: LogInterface;
 	securityHeaders: SecurityHeadersOptions;
+	swaggerEnabled?: boolean;
 }
 
 export const defaultSecurityHeadersOptions: SecurityHeadersOptions = {

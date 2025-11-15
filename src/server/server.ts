@@ -3,17 +3,25 @@ import cors from 'cors';
 import http from 'http';
 
 import { defaultRestServerOptions, RestServerOptions } from './server-options';
-import { ApiRouter } from '../router';
+import { ApiRouter, BaseApiRouter } from '../router';
 import { HTTPError, NotFoundError, ErrorResponse } from '../error';
 
 import { LogInterface } from '../log';
+import { oasRoutes } from '../oas/routes';
 
 export abstract class RestServer {
+	public name = 'RestServer';
+	public description = 'REST API Server';
+	public version = '';
+
 	public router: ApiRouter;
+	public routerInstance: BaseApiRouter;
+
 	public readonly port: number;
 	public readonly maxPayloadSizeMB: number;
 	public readonly maxUrlEncodedSizeMB: number;
 	public readonly securityHeaders: RestServerOptions['securityHeaders'];
+	public swaggerEnabled = false;
 
 	protected app: express.Express;
 	protected listener: http.Server;
@@ -30,11 +38,13 @@ export abstract class RestServer {
 			...defaultRestServerOptions.securityHeaders,
 			...options.securityHeaders,
 		};
+		this.swaggerEnabled = options.swaggerEnabled ?? false;
 	}
 
 	public async start() {
 		await this.setupExpress();
 		await this.registerRoutes();
+		await this.registerSwagger();
 		await this.setup404Handler();
 		await this.setupErrorHandler();
 		await this.startListening();
@@ -47,8 +57,17 @@ export abstract class RestServer {
 	}
 
 	protected async registerRoutes(): Promise<void> {
-		const router = new this.router();
-		await router.register(this.app, '');
+		this.routerInstance = new this.router();
+		await this.routerInstance.register(this.app, '');
+	}
+
+	protected async registerSwagger(): Promise<void> {
+		if (this.swaggerEnabled) {
+			await oasRoutes({
+				router: this.app,
+				server: this,
+			});
+		}
 	}
 
 	protected async setupExpress(): Promise<void> {

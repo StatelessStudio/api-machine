@@ -27,6 +27,7 @@ export enum EndpointMethod {
 
 export abstract class BaseApiEndpoint extends BaseApiRoute {
 	override path = '';
+	public tag?: string;
 	public method: EndpointMethod = EndpointMethod.GET;
 	public statusCode: number = 200;
 
@@ -35,10 +36,39 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 	public static params?: ObjectSanitizer;
 	public static headers?: ObjectSanitizer;
 
+	public constructor() {
+		super();
+	}
+
+	public getBodySanitizer(): ObjectSanitizer | undefined {
+		return (this.constructor as { body?: ObjectSanitizer }).body;
+	}
+
+	public getQuerySanitizer(): ObjectSanitizer | undefined {
+		return (this.constructor as { query?: ObjectSanitizer }).query;
+	}
+
+	public getParamsSanitizer(): ObjectSanitizer | undefined {
+		return (this.constructor as { params?: ObjectSanitizer }).params;
+	}
+
+	public getHeadersSanitizer(): ObjectSanitizer | undefined {
+		return (this.constructor as { headers?: ObjectSanitizer }).headers;
+	}
+
+	public getTag(): string {
+		// Determine tag from router if available, fallback to class name
+		return this.tag || this.constructor.name.replace(/Endpoint$/, '');
+	}
+
 	public override async register(
 		parentRouter: ExpressRouter,
 		parentPath: string
 	): Promise<void> {
+		if (!this.name) {
+			this.name = this.constructor.name.replace(/Endpoint$/, '');
+		}
+
 		this.registerRoutePath(parentPath);
 
 		// Register with middleware (if any) before the handler
