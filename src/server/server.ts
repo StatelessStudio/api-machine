@@ -185,6 +185,24 @@ export abstract class RestServer {
 						.json(error.getResponseJson());
 				}
 
+				if (
+					error instanceof Error &&
+					'expose' in error &&
+					(error as { expose: boolean }).expose === true
+				) {
+					let statusCode = 500;
+
+					if ('statusCode' in error) {
+						statusCode = (error as { statusCode: number })
+							.statusCode;
+					}
+
+					return response.status(statusCode).json(<ErrorResponse>{
+						error: error.name,
+						message: error.message,
+					});
+				}
+
 				// Handle generic errors
 				this.log?.error('Unhandled error:', error);
 
