@@ -19,16 +19,19 @@ export class OasEndpointConverter {
 		this.addParams({
 			location: 'path',
 			sanitizer: endpoint.getParamsSanitizer(),
+			example: endpoint.paramsExample,
 		});
 
 		this.addParams({
 			location: 'query',
 			sanitizer: endpoint.getQuerySanitizer(),
+			example: endpoint.queryExample,
 		});
 
 		this.addParams({
 			location: 'header',
 			sanitizer: endpoint.getHeadersSanitizer(),
+			example: endpoint.headersExample,
 		});
 
 		let requestBody: RequestBodyObject | undefined = undefined;
@@ -54,7 +57,7 @@ export class OasEndpointConverter {
 		const status = endpoint.statusCode;
 
 		return {
-			[endpoint.method]: {
+			[endpoint.method]: <PathItemObject>{
 				summary: endpoint.getName(),
 				description: endpoint.description,
 				tags: [endpoint.getTag()],
@@ -73,14 +76,20 @@ export class OasEndpointConverter {
 	protected addParams({
 		location,
 		sanitizer,
+		example,
 	}: {
 		location: 'path' | 'query' | 'header';
 		sanitizer?: ObjectSanitizer;
+		example?: any;
 	}) {
 		if (sanitizer && sanitizer.schema) {
 			for (const key in sanitizer.schema) {
 				const valSan = sanitizer.schema[key];
 				const param = buildParameter(key, valSan, location);
+
+				if (example && example[key] !== undefined) {
+					param.example = example[key];
+				}
 
 				this.parameters.push(param);
 			}

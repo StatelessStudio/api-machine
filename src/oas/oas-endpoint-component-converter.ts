@@ -18,6 +18,7 @@ export class OasEndpointComponentConverter {
 			this.addSchema({
 				name: `${endpoint.name}Body`,
 				sanitizer: bodySanitizer,
+				example: endpoint.bodyExample,
 			});
 		}
 
@@ -27,13 +28,20 @@ export class OasEndpointComponentConverter {
 	protected addSchema({
 		name,
 		sanitizer,
+		example,
 	}: {
 		name: string;
 		sanitizer: ObjectSanitizer;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		example?: any;
 	}) {
 		const schema = buildObjectSchema(sanitizer);
 
 		if (schema) {
+			if (example) {
+				schema.example = example;
+			}
+
 			this.schemas[name] = schema;
 		}
 	}

@@ -32,9 +32,16 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 	public statusCode: number = 200;
 
 	public static body?: ObjectSanitizer;
+	public bodyExample?: any;
+
 	public static query?: ObjectSanitizer;
+	public queryExample?: any;
+
 	public static params?: ObjectSanitizer;
+	public paramsExample?: any;
+
 	public static headers?: ObjectSanitizer;
+	public headersExample?: any;
 
 	public constructor() {
 		super();

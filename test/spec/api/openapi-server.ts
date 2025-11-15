@@ -40,6 +40,11 @@ class CreateUserEndpoint extends PostEndpoint {
 		email: emailValidator(),
 	});
 
+	override bodyExample = {
+		name: 'John Doe',
+		email: 'john.doe@example.com',
+	};
+
 	async handle(request: ApiRequest) {
 		const id = Math.random().toString(36).slice(2);
 		usersDb[id] = { id, ...request.body };
@@ -61,6 +66,10 @@ class GetUserEndpoint extends GetEndpoint {
 			maxLength: 50,
 		}),
 	});
+
+	override headersExample = {
+		'x-request-id': 'req-12345',
+	};
 
 	async handle(request: ApiRequest) {
 		const user = usersDb[request.params['id']];
@@ -104,6 +113,10 @@ class UpdateUserEndpoint extends PatchEndpoint {
 		name: nameValidator(true),
 		email: emailValidator(true),
 	});
+
+	override bodyExample = {
+		name: 'Updated Name',
+	};
 
 	async handle(request: ApiRequest) {
 		if (!usersDb[request.params['id']]) {
