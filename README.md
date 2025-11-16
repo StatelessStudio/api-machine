@@ -322,7 +322,7 @@ For the complete list of error classes, usage examples, and custom error creatio
 
 ## Validation & Sanitization
 
-ts-rest supports request validation and sanitization using [valsan](https://www.npmjs.com/package/valsan). You can declare static ObjectSanitizer members on your endpoint classes for `body`, `query`, `params`, or `headers`:
+ts-rest supports request validation and sanitization using [valsan](https://www.npmjs.com/package/valsan). You can declare ObjectSanitizer members on your endpoint classes for `body`, `query`, `params`, or `headers`:
 
 ```typescript
 import { ObjectSanitizer, EmailValidator } from 'valsan';
@@ -331,7 +331,7 @@ import { NameValSan } from './examples/complete-example/users/name-valsan';
 class CreateUserEndpoint extends PostEndpoint {
   override path = '/users';
 
-  static override body = new ObjectSanitizer({
+  override body = new ObjectSanitizer({
     name: new NameValSan(),
     email: new EmailValidator(),
   });

@@ -26,7 +26,7 @@
 		"cors": "^2.8.5",
 		"express": "^5.1.0",
 		"swagger-ui-express": "^5.0.1",
-		"valsan": "^2.1.0"
+		"valsan": "^2.1.1"
 	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",

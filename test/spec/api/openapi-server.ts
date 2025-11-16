@@ -37,7 +37,7 @@ class CreateUserEndpoint extends PostEndpoint {
 	override path = '/users';
 	override description = 'Creates a new user';
 
-	static override body = new ObjectSanitizer({
+	override body = new ObjectSanitizer({
 		name: nameValidator(),
 		email: emailValidator(),
 	});
@@ -65,11 +65,11 @@ class GetUserEndpoint extends GetEndpoint {
 		};
 	}
 
-	static override params = new ObjectSanitizer({
+	override params = new ObjectSanitizer({
 		id: idValidator(),
 	});
 
-	static override headers = new ObjectSanitizer({
+	override headers = new ObjectSanitizer({
 		'x-request-id': new LengthValidator({
 			minLength: 5,
 			maxLength: 50,
@@ -94,7 +94,7 @@ class GetUserEndpoint extends GetEndpoint {
 class ListUsersEndpoint extends GetEndpoint {
 	override path = '/users';
 
-	static override query = new ObjectSanitizer({
+	override query = new ObjectSanitizer({
 		limit: new ComposedValSan(
 			[
 				new StringToNumberValSan(),
@@ -117,8 +117,11 @@ class ListUsersEndpoint extends GetEndpoint {
 class UpdateUserEndpoint extends PatchEndpoint {
 	override path = '/users/:id';
 
-	static override params = GetUserEndpoint.params;
-	static override body = new ObjectSanitizer({
+	override params = new ObjectSanitizer({
+		id: idValidator(),
+	});
+
+	override body = new ObjectSanitizer({
 		name: nameValidator(true),
 		email: emailValidator(true),
 	});
@@ -155,7 +158,9 @@ class UpdateUserEndpoint extends PatchEndpoint {
 
 class DeleteUserEndpoint extends DeleteEndpoint {
 	override path = '/users/:id';
-	static override params = GetUserEndpoint.params;
+	override params = new ObjectSanitizer({
+		id: idValidator(),
+	});
 
 	override getErrors() {
 		return {
@@ -203,7 +208,7 @@ const postNotFoundError = new NotFoundError('Post not found');
 class CreatePostEndpoint extends PostEndpoint {
 	override path = '/posts';
 
-	static override body = new ObjectSanitizer({
+	override body = new ObjectSanitizer({
 		title: new LengthValidator({ minLength: 2, maxLength: 100 }),
 		content: new LengthValidator({ minLength: 1, maxLength: 1000 }),
 	});
@@ -219,7 +224,7 @@ class CreatePostEndpoint extends PostEndpoint {
 class GetPostEndpoint extends GetEndpoint {
 	override path = '/posts/:id';
 
-	static override params = new ObjectSanitizer({
+	override params = new ObjectSanitizer({
 		id: new LengthValidator({ minLength: 1, maxLength: 50 }),
 	});
 
@@ -251,8 +256,14 @@ class ListPostsEndpoint extends GetEndpoint {
 class UpdatePostEndpoint extends PutEndpoint {
 	override path = '/posts/:id';
 
-	static override params = GetPostEndpoint.params;
-	static override body = CreatePostEndpoint.body;
+	override params = new ObjectSanitizer({
+		id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+	});
+
+	override body = new ObjectSanitizer({
+		title: new LengthValidator({ minLength: 2, maxLength: 100 }),
+		content: new LengthValidator({ minLength: 1, maxLength: 1000 }),
+	});
 
 	override getErrors() {
 		return {
@@ -278,7 +289,9 @@ class UpdatePostEndpoint extends PutEndpoint {
 class DeletePostEndpoint extends DeleteEndpoint {
 	override path = '/posts/:id';
 
-	static override params = GetPostEndpoint.params;
+	override params = new ObjectSanitizer({
+		id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+	});
 
 	override getErrors() {
 		return {

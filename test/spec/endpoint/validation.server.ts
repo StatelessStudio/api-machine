@@ -25,7 +25,7 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestHeadersEndpoint extends PostEndpoint {
 				override path = '/headers';
 
-				static override headers = new ObjectSanitizer({
+				override headers = new ObjectSanitizer({
 					'x-custom-header': new ComposedValSan([
 						new TrimSanitizer(),
 						new LengthValidator({ minLength: 5 }),
@@ -45,7 +45,7 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestQueryParamsEndpoint extends GetEndpoint {
 				override path = '/query-params';
 
-				static override query = new ObjectSanitizer({
+				override query = new ObjectSanitizer({
 					search: new ComposedValSan([
 						new TrimSanitizer(),
 						new LengthValidator({ minLength: 3 }),
@@ -61,7 +61,7 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestRouteParamsEndpoint extends PostEndpoint {
 				override path = '/route-params/:itemId';
 
-				static override params = new ObjectSanitizer({
+				override params = new ObjectSanitizer({
 					itemId: new ComposedValSan([
 						new StringToNumberValSan(),
 						new MinValidator({ min: 1 }),
@@ -77,7 +77,7 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestBodyEndpoint extends PostEndpoint {
 				override path = '/body';
 
-				static override body = new ObjectSanitizer({
+				override body = new ObjectSanitizer({
 					name: new NameValSan(),
 					email: new EmailValidator(),
 				});
@@ -94,26 +94,26 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestAllValidationEndpoint extends PostEndpoint {
 				override path = '/all/:userId';
 
-				static override body = new ObjectSanitizer({
+				override body = new ObjectSanitizer({
 					name: new NameValSan(),
 					email: new EmailValidator(),
 				});
 
-				static override query = new ObjectSanitizer({
+				override query = new ObjectSanitizer({
 					age: new ComposedValSan([
 						new StringToNumberValSan(),
 						new MinValidator({ min: 0 }),
 					]),
 				});
 
-				static override params = new ObjectSanitizer({
+				override params = new ObjectSanitizer({
 					userId: new ComposedValSan([
 						new StringToNumberValSan(),
 						new MinValidator({ min: 1 }),
 					]),
 				});
 
-				static override headers = new ObjectSanitizer({
+				override headers = new ObjectSanitizer({
 					'X-User-Token': new ComposedValSan([
 						new TrimSanitizer(),
 						new LengthValidator({ minLength: 10 }),

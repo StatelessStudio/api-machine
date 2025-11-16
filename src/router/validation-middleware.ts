@@ -22,29 +22,30 @@ export async function runSanitizer(sanitizer: ObjectSanitizer, value: any) {
 /**
  * Validates and sanitizes request parts
  *  (body, query, params, headers) if the
- *  endpoint defines a static ObjectSanitizers
+ *  endpoint defines a ObjectSanitizers
  */
 export async function validateRequest(
 	endpoint: BaseApiEndpoint,
 	request: ApiRequest
 ): Promise<void> {
 	for (const part of ['body', 'query', 'params', 'headers'] as const) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const sanitizer = (endpoint.constructor as any)[part];
+		const sanitizer = endpoint[part];
 
-		if (sanitizer instanceof ObjectSanitizer) {
-			const sanitized = await runSanitizer(sanitizer, request[part]);
+		if (!sanitizer) {
+			continue;
+		}
 
-			if (part === 'query') {
-				// Mutate the query object instead of reassigning
-				Object.keys(request.query).forEach((key) => {
-					delete request.query[key];
-				});
-				Object.assign(request.query, sanitized);
-			}
-			else {
-				request[part] = sanitized;
-			}
+		const sanitized = await runSanitizer(sanitizer, request[part]);
+
+		if (part === 'query') {
+			// Mutate the query object instead of reassigning
+			Object.keys(request.query).forEach((key) => {
+				delete request.query[key];
+			});
+			Object.assign(request.query, sanitized);
+		}
+		else {
+			request[part] = sanitized;
 		}
 	}
 }

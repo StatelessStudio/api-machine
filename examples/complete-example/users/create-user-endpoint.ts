@@ -11,7 +11,7 @@ import { NameValSan } from './name-valsan';
 export class CreateUserEndpoint extends PostEndpoint {
 	override path = '/';
 
-	static override body = new ObjectSanitizer({
+	override body = new ObjectSanitizer({
 		name: new NameValSan(),
 		email: new EmailValidator(),
 	});

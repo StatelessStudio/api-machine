@@ -48,7 +48,7 @@ The generator pulls metadata from a few common places — set these values on yo
 
 ### ValSan schemas
 
-This project uses `valsan` validators on endpoints to infer request/parameter and body schemas. Common validator placements include static properties on endpoint classes such as `params`, `query`, `headers`, and `body`.
+This project uses `valsan` validators on endpoints to infer request/parameter and body schemas. Common validator placements include properties on endpoint classes such as `params`, `query`, `headers`, and `body`.
 
 If you rely on Valsan validators in your endpoints, the self-documenting feature will include schema details automatically — this keeps the documentation accurate and minimizes duplication.
 

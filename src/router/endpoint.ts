@@ -32,19 +32,19 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 	public method: EndpointMethod = EndpointMethod.GET;
 	public statusCode: number = 200;
 
-	public static body?: ObjectSanitizer;
+	public body?: ObjectSanitizer;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public bodyExample?: any;
 
-	public static query?: ObjectSanitizer;
+	public query?: ObjectSanitizer;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public queryExample?: any;
 
-	public static params?: ObjectSanitizer;
+	public params?: ObjectSanitizer;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public paramsExample?: any;
 
-	public static headers?: ObjectSanitizer;
+	public headers?: ObjectSanitizer;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public headersExample?: any;
 
@@ -60,19 +60,19 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 	}
 
 	public getBodySanitizer(): ObjectSanitizer | undefined {
-		return (this.constructor as { body?: ObjectSanitizer }).body;
+		return this.body;
 	}
 
 	public getQuerySanitizer(): ObjectSanitizer | undefined {
-		return (this.constructor as { query?: ObjectSanitizer }).query;
+		return this.query;
 	}
 
 	public getParamsSanitizer(): ObjectSanitizer | undefined {
-		return (this.constructor as { params?: ObjectSanitizer }).params;
+		return this.params;
 	}
 
 	public getHeadersSanitizer(): ObjectSanitizer | undefined {
-		return (this.constructor as { headers?: ObjectSanitizer }).headers;
+		return this.headers;
 	}
 
 	public getTag(): string {
