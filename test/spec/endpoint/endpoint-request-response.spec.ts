@@ -212,7 +212,7 @@ describe('Request and Response Handling', function () {
 			expect(customHeader).toBe('test-value');
 
 			const poweredBy = response.headers.get('X-Powered-By');
-			expect(poweredBy).toBe('ts-rest');
+			expect(poweredBy).toBe('api-machine');
 		});
 
 		it('should set Content-Type header automatically', async function () {

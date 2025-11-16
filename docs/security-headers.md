@@ -1,6 +1,6 @@
 # Security Headers
 
-The ts-rest server implements security best practices by setting HTTP security headers globally and disabling server fingerprinting headers.
+The api-machine server implements security best practices by setting HTTP security headers globally and disabling server fingerprinting headers.
 
 ## Default Security Headers
 
@@ -41,7 +41,7 @@ By default, the server applies the following security configurations:
 You can customize security headers when creating your server:
 
 ```typescript
-import { RestServer } from 'ts-rest';
+import { RestServer } from 'api-machine';
 
 class MyServer extends RestServer {
     override async routes() {
@@ -117,7 +117,7 @@ const server = new MyServer({
 You can override global security headers in individual endpoints:
 
 ```typescript
-import { ApiRequest, ApiResponse, BaseApiEndpoint } from 'ts-rest';
+import { ApiRequest, ApiResponse, BaseApiEndpoint } from 'api-machine';
 
 export class CustomHeaderEndpoint extends BaseApiEndpoint {
     override path = '/custom';

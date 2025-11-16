@@ -41,7 +41,7 @@ export class RequestResponseRouter extends BaseApiRouter {
 				) {
 					response.setHeader('X-Custom-Response', 'test-value');
 					// Override the globally disabled X-Powered-By
-					response.setHeader('X-Powered-By', 'ts-rest');
+					response.setHeader('X-Powered-By', 'api-machine');
 					return { message: 'Headers set' };
 				}
 			},

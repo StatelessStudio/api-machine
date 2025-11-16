@@ -1,11 +1,11 @@
-# ts-rest - REST API Server Framework
+# api-machine - REST API Server Framework
 
 A lightweight, TypeScript-first REST API framework built on Express with a class-based routing architecture.
 
 ## Installation
 
 ```bash
-npm i ts-rest
+npm i api-machine
 ```
 
 ## Features
@@ -106,7 +106,7 @@ Custom logger interface for handling server logging (e.g. `ts-tiny-log`). Must i
 
 #### securityHeaders `SecurityHeadersOptions`
 
-Configuration for HTTP security headers. By default, ts-rest is **secure by default** with:
+Configuration for HTTP security headers. By default, api-machine is **secure by default** with:
 - X-Powered-By header removed (prevents server fingerprinting)
 - X-Content-Type-Options: nosniff (prevents MIME sniffing)
 - X-Frame-Options: DENY (prevents clickjacking)
@@ -164,7 +164,7 @@ Abstract class for creating API endpoints.
 
 #### Using Different HTTP Methods
 
-ts-rest provides convenience classes for each HTTP method with appropriate default status codes:
+api-machine provides convenience classes for each HTTP method with appropriate default status codes:
 
 ```typescript
 // GET endpoint (200 OK by default)
@@ -244,7 +244,7 @@ You can also use `BaseApiEndpoint` and manually set the `method` and `statusCode
 A ready-to-use health check endpoint that returns system status information. Simply include it in your router:
 
 ```typescript
-import { BaseApiRouter, HealthCheckEndpoint } from 'ts-rest';
+import { BaseApiRouter, HealthCheckEndpoint } from 'api-machine';
 
 class MyRouter extends BaseApiRouter {
 	override path = '/api';
@@ -279,10 +279,10 @@ For advanced usage, extending the health check with custom checks, and deploymen
 
 ## Error Handling
 
-ts-rest provides a comprehensive set of HTTP error classes for standardized error responses. All errors extend `HTTPError` and automatically format responses with proper status codes and headers.
+api-machine provides a comprehensive set of HTTP error classes for standardized error responses. All errors extend `HTTPError` and automatically format responses with proper status codes and headers.
 
 ```typescript
-import { NotFoundError, BadRequestError, UnauthorizedError } from 'ts-rest';
+import { NotFoundError, BadRequestError, UnauthorizedError } from 'api-machine';
 
 class GetUserEndpoint extends GetEndpoint {
 	override path = '/users/:id';
@@ -322,7 +322,7 @@ For the complete list of error classes, usage examples, and custom error creatio
 
 ## Validation & Sanitization
 
-ts-rest supports request validation and sanitization using [valsan](https://www.npmjs.com/package/valsan). You can declare ObjectSanitizer members on your endpoint classes for `body`, `query`, `params`, or `headers`:
+api-machine supports request validation and sanitization using [valsan](https://www.npmjs.com/package/valsan). You can declare ObjectSanitizer members on your endpoint classes for `body`, `query`, `params`, or `headers`:
 
 ```typescript
 import { ObjectSanitizer, EmailValidator } from 'valsan';
@@ -350,7 +350,7 @@ You can create custom validators by extending `ComposedValSan` from valsan. See 
 
 ## Authentication
 
-ts-rest provides a declarative authentication system with cascading support across server, router, and endpoint levels:
+api-machine provides a declarative authentication system with cascading support across server, router, and endpoint levels:
 
 ```typescript
 class SecureRouter extends BaseApiRouter {

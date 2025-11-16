@@ -1,6 +1,6 @@
 # Complete Example
 
-This comprehensive example demonstrates all major features of the ts-rest framework including domain-driven organization, multiple routers, all HTTP methods, route parameters, error handling, validation, custom logging, and Express integration. It showcases a complete REST API with organized domain structure.
+This comprehensive example demonstrates all major features of the api-machine framework including domain-driven organization, multiple routers, all HTTP methods, route parameters, error handling, validation, custom logging, and Express integration. It showcases a complete REST API with organized domain structure.
 
 ## Setup & Run
 

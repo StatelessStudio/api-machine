@@ -1,7 +1,7 @@
 {
-	"name": "ts-rest",
+	"name": "api-machine",
 	"version": "1.0.0",
-	"description": "ts-rest",
+	"description": "api-machine",
 	"private": "true",
 	"typescript-template": {
 		"base": "1.0.1",
@@ -56,13 +56,13 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ts-rest/ts-rest.git"
+		"url": "git+https://github.com/api-machine/api-machine.git"
 	},
-	"author": "ts-rest",
+	"author": "api-machine",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/ts-rest/ts-rest/issues"
+		"url": "https://github.com/api-machine/api-machine/issues"
 	},
-	"homepage": "https://github.com/ts-rest/ts-rest#readme",
+	"homepage": "https://github.com/api-machine/api-machine#readme",
 	"keywords": []
 }

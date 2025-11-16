@@ -341,7 +341,7 @@ class OpenApiRouter extends BaseApiRouter {
 export class OpenApiTestServer extends RestServer {
 	override name = 'Self-Documenting OpenAPI Test Server';
 	override version = '1.0.0';
-	override description = 'Demo of ts-rest\'s self-documenting feature';
+	override description = 'Demo of api-machine\'s self-documenting feature';
 
 	override router = OpenApiRouter;
 }

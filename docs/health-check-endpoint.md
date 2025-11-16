@@ -12,7 +12,7 @@ The `HealthCheckEndpoint` is a pre-built endpoint that provides a simple health 
 ## Basic Usage
 
 ```typescript
-import { BaseApiRouter, HealthCheckEndpoint } from 'ts-rest';
+import { BaseApiRouter, HealthCheckEndpoint } from 'api-machine';
 
 class MyRouter extends BaseApiRouter {
 	override path = '/api';
@@ -60,7 +60,7 @@ class MyHealthCheck extends HealthCheckEndpoint {
 Extend the endpoint to add custom health information:
 
 ```typescript
-import { HealthCheckEndpoint, ApiRequest, ApiResponse } from 'ts-rest';
+import { HealthCheckEndpoint, ApiRequest, ApiResponse } from 'api-machine';
 
 class ExtendedHealthCheck extends HealthCheckEndpoint {
 	override path = '/health';

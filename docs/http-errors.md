@@ -1,6 +1,6 @@
 # HTTP Error Handling
 
-The ts-rest framework provides a comprehensive set of HTTP error classes for consistent error handling across your API.
+The api-machine framework provides a comprehensive set of HTTP error classes for consistent error handling across your API.
 
 ## Overview
 
@@ -25,7 +25,7 @@ import {
     BadRequestError,
     NotFoundError,
     ConflictError
-} from 'ts-rest';
+} from 'api-machine';
 
 // 400 Bad Request
 throw new BadRequestError('Invalid input format');
@@ -45,7 +45,7 @@ Add contextual information via the `details` option:
 import {
     NotFoundError,
     UnprocessableEntityError
-} from 'ts-rest';
+} from 'api-machine';
 
 // Include the missing resource ID
 throw new NotFoundError('User not found', {
@@ -68,7 +68,7 @@ throw new UnprocessableEntityError('Validation failed', {
 Add custom headers for additional metadata:
 
 ```typescript
-import { BadRequestError } from 'ts-rest';
+import { BadRequestError } from 'api-machine';
 
 throw new BadRequestError('Request failed', {
 	headers: {
@@ -86,7 +86,7 @@ Some error classes have extended options for setting specific HTTP headers.
 ### UnauthorizedError (401)
 
 ```typescript
-import { UnauthorizedError } from 'ts-rest';
+import { UnauthorizedError } from 'api-machine';
 
 // Basic usage
 throw new UnauthorizedError('Invalid token');
@@ -117,7 +117,7 @@ throw new UnauthorizedError('Token expired', {
 ### MethodNotAllowedError (405)
 
 ```typescript
-import { MethodNotAllowedError } from 'ts-rest';
+import { MethodNotAllowedError } from 'api-machine';
 
 // Basic usage
 throw new MethodNotAllowedError();
@@ -138,7 +138,7 @@ throw new MethodNotAllowedError('Method not supported', {
 ### TooManyRequestsError (429)
 
 ```typescript
-import { TooManyRequestsError } from 'ts-rest';
+import { TooManyRequestsError } from 'api-machine';
 
 // Basic usage
 throw new TooManyRequestsError();
@@ -163,7 +163,7 @@ throw new TooManyRequestsError('Too many requests', {
 ### UnsupportedMediaTypeError (415)
 
 ```typescript
-import { UnsupportedMediaTypeError } from 'ts-rest';
+import { UnsupportedMediaTypeError } from 'api-machine';
 
 // Basic usage
 throw new UnsupportedMediaTypeError();
@@ -184,7 +184,7 @@ throw new UnsupportedMediaTypeError('Unsupported media type', {
 ### RangeNotSatisfiableError (416)
 
 ```typescript
-import { RangeNotSatisfiableError } from 'ts-rest';
+import { RangeNotSatisfiableError } from 'api-machine';
 
 // Basic usage
 throw new RangeNotSatisfiableError();
@@ -205,7 +205,7 @@ throw new RangeNotSatisfiableError('Range not satisfiable', {
 ### ProxyAuthenticationRequiredError (407)
 
 ```typescript
-import { ProxyAuthenticationRequiredError } from 'ts-rest';
+import { ProxyAuthenticationRequiredError } from 'api-machine';
 
 // Default realm
 throw new ProxyAuthenticationRequiredError();
@@ -221,7 +221,7 @@ throw new ProxyAuthenticationRequiredError('Proxy auth required', {
 ### UpgradeRequiredError (426)
 
 ```typescript
-import { UpgradeRequiredError } from 'ts-rest';
+import { UpgradeRequiredError } from 'api-machine';
 
 // Default protocol
 throw new UpgradeRequiredError();
@@ -273,8 +273,8 @@ throw new UpgradeRequiredError('Please upgrade', {
 ## In Endpoint Handlers
 
 ```typescript
-import { ApiRequest, ApiResponse, GetEndpoint } from 'ts-rest';
-import { NotFoundError, ForbiddenError } from 'ts-rest';
+import { ApiRequest, ApiResponse, GetEndpoint } from 'api-machine';
+import { NotFoundError, ForbiddenError } from 'api-machine';
 
 export class GetUserEndpoint extends GetEndpoint {
 	override path = '/:id';
@@ -342,8 +342,8 @@ Content-Type: application/json
 Extend `HTTPError` to create custom error classes:
 
 ```typescript
-import { HTTPError } from 'ts-rest';
-import { HttpErrorOptions } from 'ts-rest';
+import { HTTPError } from 'api-machine';
+import { HttpErrorOptions } from 'api-machine';
 
 export interface MyCustomErrorOptions extends HttpErrorOptions {
 	errorCode?: string;

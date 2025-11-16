@@ -20,7 +20,7 @@ export class HeadersEndpoint extends BaseApiEndpoint {
 
 		// Set response headers
 		response.setHeader('X-Custom-Header', 'custom-value');
-		response.setHeader('X-Powered-By', 'ts-rest');
+		response.setHeader('X-Powered-By', 'api-machine');
 
 		return {
 			receivedHeaders: {

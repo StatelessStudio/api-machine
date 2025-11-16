@@ -1,6 +1,6 @@
 # Self-documenting OpenAPI (Swagger)
 
-ts-rest includes a built-in, self-documenting feature that can generate an OpenAPI Spec. The spec is automatically generated from your server/router definitions, and automatically served as a Swagger UI.
+api-machine includes a built-in, self-documenting feature that can generate an OpenAPI Spec. The spec is automatically generated from your server/router definitions, and automatically served as a Swagger UI.
 
 See the Example and reference section below: [View the runnable example](#example).
 

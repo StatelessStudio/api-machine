@@ -1,12 +1,12 @@
 # Authentication
 
-ts-rest provides a declarative authentication system with cascading support across server, router, and endpoint levels. Authentication schemes automatically integrate with OpenAPI/Swagger documentation.
+api-machine provides a declarative authentication system with cascading support across server, router, and endpoint levels. Authentication schemes automatically integrate with OpenAPI/Swagger documentation.
 
 ## Quick Start
 
 ```typescript
-import { RestServer, BaseApiRouter, BaseApiEndpoint } from 'ts-rest';
-import { BearerAuthenticationScheme } from 'ts-rest';
+import { RestServer, BaseApiRouter, BaseApiEndpoint } from 'api-machine';
+import { BearerAuthenticationScheme } from 'api-machine';
 
 class SecureEndpoint extends BaseApiEndpoint {
   override path = '/data';
@@ -76,7 +76,7 @@ class AdminEndpoint extends BaseApiEndpoint {
 Validates Bearer tokens from the `Authorization` header.
 
 ```typescript
-import { BearerAuthenticationScheme } from 'ts-rest';
+import { BearerAuthenticationScheme } from 'api-machine';
 
 const auth = new BearerAuthenticationScheme({
   checkToken: async (token: string) => {
@@ -167,7 +167,7 @@ This bypasses any parent router or server authentication.
 Create custom authentication by extending `AuthenticationScheme`:
 
 ```typescript
-import { AuthenticationScheme } from 'ts-rest';
+import { AuthenticationScheme } from 'api-machine';
 import { RequestHandler } from 'express';
 
 class ApiKeyAuthenticationScheme extends AuthenticationScheme {
