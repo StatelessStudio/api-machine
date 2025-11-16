@@ -87,7 +87,10 @@ export class OasRestServerConverter {
 			endpoint,
 			effectiveAuth
 		);
-		const path = endpoint.fullPath.replace(/:([a-zA-Z0-9_]+)/g, '{$1}');
+		const path = (endpoint.fullPath || '/').replace(
+			/:([a-zA-Z0-9_]+)/g,
+			'{$1}'
+		);
 
 		if (this.paths[path] === undefined) {
 			this.paths[path] = {};

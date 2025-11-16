@@ -1,4 +1,9 @@
-import { BaseApiRouter, GetEndpoint, ApiRequest } from '../../../src';
+import {
+	BaseApiRouter,
+	GetEndpoint,
+	ApiRequest,
+	RestServer,
+} from '../../../src';
 
 export class RoutingRouter extends BaseApiRouter {
 	override path = '/routing';
@@ -73,4 +78,22 @@ export class RoutingRouter extends BaseApiRouter {
 			},
 		];
 	}
+}
+
+export class NoPathEndpoint extends GetEndpoint {
+	// No path defined here
+	override async handle() {
+		return { message: 'No path defined' };
+	}
+}
+
+export class NoPathRouter extends BaseApiRouter {
+	// No path defined here
+	override async routes() {
+		return [NoPathEndpoint];
+	}
+}
+
+export class NoPathServer extends RestServer {
+	override router = NoPathRouter;
 }

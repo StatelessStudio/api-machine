@@ -1,5 +1,8 @@
 import 'jasmine';
 import { env } from '../../env';
+import { NoPathServer } from './endpoint-routing.server';
+import { OpenAPIObject } from 'auto-oas';
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 9999999;
 
 describe('Endpoint Routing', function () {
 	const baseUrl = env.API_URL + '/routing';
@@ -173,6 +176,34 @@ describe('Endpoint Routing', function () {
 
 			expect(fullPath).toBe('/test/full-path');
 			expect(response.status).toBe(200);
+		});
+
+		it('supports no paths defined', async function () {
+			const noPathServer = new NoPathServer({
+				port: 4040,
+				swaggerEnabled: true,
+			});
+			await noPathServer.start();
+
+			const response = await fetch('http://localhost:4040/');
+			expect(response.status).toBe(200);
+
+			const body = (await response.json()) as { message: string };
+			expect(body.message).toBe('No path defined');
+
+			const openapiResponse = await fetch(
+				'http://localhost:4040/openapi.json'
+			);
+			expect(openapiResponse.status).toBe(200);
+
+			const openapi = (await openapiResponse.json()) as OpenAPIObject;
+			const pathObject = openapi.paths?.['/']?.get;
+
+			expect(pathObject).toBeDefined();
+			expect(pathObject?.summary).toBe('NoPath');
+			expect(pathObject?.tags).toEqual(['NoPath']);
+
+			await noPathServer.stop();
 		});
 	});
 });
