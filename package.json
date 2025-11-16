@@ -1,6 +1,6 @@
 {
 	"name": "api-machine",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "api-machine",
 	"private": "true",
 	"typescript-template": {
@@ -22,7 +22,7 @@
 		"publish": "npm run script -- publish"
 	},
 	"dependencies": {
-		"auto-oas": "^1.2.0",
+		"auto-oas": "^1.2.1",
 		"cors": "^2.8.5",
 		"express": "^5.1.0",
 		"swagger-ui-express": "^5.0.1",

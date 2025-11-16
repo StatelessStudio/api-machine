@@ -6,6 +6,7 @@ export abstract class BaseApiRoute {
 	public fullPath: string;
 	public name: string;
 	public description?: string;
+	public routeType: 'router' | 'endpoint';
 
 	/**
 	 * Optional array of Express middleware to apply
