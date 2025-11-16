@@ -132,6 +132,30 @@ export class ValidationRouter extends BaseApiRouter {
 					};
 				}
 			},
+			class OptionalValidationEndpoint extends GetEndpoint {
+				override path = '/optional-validation';
+				override query = new ObjectSanitizer({
+					name: new ComposedValSan(
+						[
+							new TrimSanitizer(),
+							new LengthValidator({ minLength: 3 }),
+						],
+						{ isOptional: true }
+					),
+					email: new ComposedValSan(
+						[new TrimSanitizer(), new EmailValidator()],
+						{ isOptional: true }
+					),
+				});
+
+				override async handle(
+					request: ApiRequest
+				): Promise<ApiResponseData> {
+					return {
+						request: request.query,
+					};
+				}
+			},
 		];
 	}
 }

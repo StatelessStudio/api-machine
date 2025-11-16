@@ -1,3 +1,9 @@
+import {
+	ComposedValSan,
+	LengthValidator,
+	ObjectSanitizer,
+	TrimSanitizer,
+} from 'valsan';
 import { ApiRequest, ApiResponse, GetEndpoint } from '../../../src/index';
 import { usersRepo } from './users-repository';
 
@@ -9,6 +15,17 @@ import { usersRepo } from './users-repository';
  */
 export class ListUsersEndpoint extends GetEndpoint {
 	override path = '/';
+
+	override params = new ObjectSanitizer({
+		name: new ComposedValSan(
+			[new TrimSanitizer(), new LengthValidator({ minLength: 3 })],
+			{ isOptional: true }
+		),
+		email: new ComposedValSan(
+			[new TrimSanitizer(), new LengthValidator({ minLength: 5 })],
+			{ isOptional: true }
+		),
+	});
 
 	async handle(request: ApiRequest, response: ApiResponse) {
 		return Object.values(usersRepo);

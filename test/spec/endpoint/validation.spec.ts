@@ -236,4 +236,20 @@ describe('Validation', function () {
 		expect(details.some((d) => d.field === 'name')).toBeTrue();
 		expect(details.some((d) => d.field === 'email')).toBeTrue();
 	});
+
+	it('should support optional query params', async function () {
+		const response = await fetch(baseUrl + '/optional-validation', {
+			method: 'GET',
+			headers: { 'Content-Type': 'application/json' },
+		});
+
+		expect(response.status).toBe(200);
+		const data = (await response.json()) as {
+			request: Record<string, never>;
+		};
+
+		expect(data).toEqual({
+			request: {},
+		});
+	});
 });

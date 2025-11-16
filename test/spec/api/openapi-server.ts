@@ -20,11 +20,11 @@ import {
 import { StringToNumberValSan } from 'valsan';
 import { RangeValidator } from 'valsan';
 
-const idValidator = () => new LengthValidator({ minLength: 1, maxLength: 50 });
-const nameValidator = (isOptional: boolean = false) =>
-	new LengthValidator({ minLength: 2, maxLength: 50, isOptional });
-const emailValidator = (isOptional: boolean = false) =>
-	new EmailValidator({ isOptional });
+const idValidator = new LengthValidator({ minLength: 1, maxLength: 50 });
+const nameValidator = new ComposedValSan([
+	new LengthValidator({ minLength: 2, maxLength: 50 }),
+]);
+const emailValidator = new ComposedValSan([new EmailValidator()]);
 
 /**
  * Users
@@ -38,8 +38,8 @@ class CreateUserEndpoint extends PostEndpoint {
 	override description = 'Creates a new user';
 
 	override body = new ObjectSanitizer({
-		name: nameValidator(),
-		email: emailValidator(),
+		name: nameValidator,
+		email: emailValidator,
 	});
 
 	override bodyExample = {
@@ -66,7 +66,7 @@ class GetUserEndpoint extends GetEndpoint {
 	}
 
 	override params = new ObjectSanitizer({
-		id: idValidator(),
+		id: idValidator,
 	});
 
 	override headers = new ObjectSanitizer({
@@ -103,6 +103,8 @@ class ListUsersEndpoint extends GetEndpoint {
 			],
 			{ isOptional: true }
 		),
+		name: nameValidator.copy({ isOptional: true }),
+		email: emailValidator.copy({ isOptional: true }),
 	});
 
 	async handle(request: ApiRequest) {
@@ -118,12 +120,12 @@ class UpdateUserEndpoint extends PatchEndpoint {
 	override path = '/users/:id';
 
 	override params = new ObjectSanitizer({
-		id: idValidator(),
+		id: idValidator,
 	});
 
 	override body = new ObjectSanitizer({
-		name: nameValidator(true),
-		email: emailValidator(true),
+		name: nameValidator.copy({ isOptional: true }),
+		email: emailValidator.copy({ isOptional: true }),
 	});
 
 	override bodyExample = {
@@ -159,7 +161,7 @@ class UpdateUserEndpoint extends PatchEndpoint {
 class DeleteUserEndpoint extends DeleteEndpoint {
 	override path = '/users/:id';
 	override params = new ObjectSanitizer({
-		id: idValidator(),
+		id: idValidator,
 	});
 
 	override getErrors() {
