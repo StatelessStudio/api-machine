@@ -45,4 +45,13 @@ module.exports = {
 		"@typescript-eslint/promise-function-async": 1,
 		"@typescript-eslint/no-var-requires": 2,
 	},
+	overrides: [
+		{
+			files: ["examples/**/*.ts", "scripts/**/*.ts"],
+			rules: {
+				"@typescript-eslint/no-unused-vars": [1, { "argsIgnorePattern": "request|response" }],
+				"no-console": 0
+			}
+		},
+	]
 };

@@ -1,7 +1,7 @@
 {
-	"name": "ts-rest",
+	"name": "api-machine",
 	"version": "1.0.0",
-	"description": "ts-rest",
+	"description": "api-machine",
 	"private": "true",
 	"typescript-template": {
 		"base": "1.0.1",
@@ -21,10 +21,20 @@
 		"script": "ts-node scripts",
 		"publish": "npm run script -- publish"
 	},
+	"dependencies": {
+		"auto-oas": "^1.2.0",
+		"cors": "^2.8.5",
+		"express": "^5.1.0",
+		"swagger-ui-express": "^5.0.1",
+		"valsan": "^2.2.0"
+	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.5",
 		"@types/jasmine": "^5.1.4",
 		"@types/node": "^18.19.39",
+		"@types/swagger-ui-express": "^4.1.8",
 		"@typescript-eslint/eslint-plugin": "^7.13.1",
 		"eslint": "^8.57.0",
 		"jasmine": "^5.1.0",
@@ -32,6 +42,8 @@
 		"prettier": "^3.3.2",
 		"prettier-eslint": "^16.3.0",
 		"prettier-eslint-cli": "^8.0.1",
+		"ts-appconfig": "^1.2.0",
+		"ts-jasmine-spies": "^1.0.0",
 		"ts-node": "^10.9.2",
 		"ts-packager": "^1.1.0",
 		"ts-script": "^1.0.0",
@@ -39,15 +51,18 @@
 		"typedoc": "^0.26.1",
 		"typescript": "~5.4.2"
 	},
+	"peerDependencies": {
+		"valsan": "^2.2.0"
+	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ts-rest/ts-rest.git"
+		"url": "git+https://github.com/StatelessStudio/api-machine.git"
 	},
-	"author": "ts-rest",
+	"author": "StatelessStudio",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/ts-rest/ts-rest/issues"
+		"url": "https://github.com/StatelessStudio/api-machine/issues"
 	},
-	"homepage": "https://github.com/ts-rest/ts-rest#readme",
+	"homepage": "https://github.com/StatelessStudio/api-machine#readme",
 	"keywords": []
 }

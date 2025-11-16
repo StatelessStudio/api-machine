@@ -9,11 +9,12 @@
 			"type": "node",
 			"request": "launch",
 			"args": [
-				"scripts/example.ts"
+				"scripts/index.ts",
+				"openapi"
 			],
 			"runtimeArgs": [
 				"-r",
-				"ts-node/register"
+				"ts-node/register",
 			],
 			"cwd": "${workspaceRoot}",
 			"internalConsoleOptions": "openOnSessionStart"

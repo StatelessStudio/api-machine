@@ -1,8 +1,10 @@
 import 'jasmine';
-import * as index from '../../src';
+import { server } from '../test-server';
 
-describe('ts-rest', () => {
-	it('exports a', () => {
-		expect(index.a).toBeTrue();
-	});
+beforeAll(async () => {
+	await server.start();
+});
+
+afterAll(async () => {
+	await server.stop();
 });
