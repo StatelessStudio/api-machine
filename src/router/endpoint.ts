@@ -55,26 +55,6 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 		};
 	}
 
-	public constructor() {
-		super();
-	}
-
-	public getBodySanitizer(): ObjectSanitizer | undefined {
-		return this.body;
-	}
-
-	public getQuerySanitizer(): ObjectSanitizer | undefined {
-		return this.query;
-	}
-
-	public getParamsSanitizer(): ObjectSanitizer | undefined {
-		return this.params;
-	}
-
-	public getHeadersSanitizer(): ObjectSanitizer | undefined {
-		return this.headers;
-	}
-
 	public getTag(): string {
 		// Determine tag from router if available, fallback to class name
 		return this.tag || this.constructor.name.replace(/Endpoint$/, '');

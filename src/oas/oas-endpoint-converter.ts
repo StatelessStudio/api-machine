@@ -22,24 +22,24 @@ export class OasEndpointConverter {
 	): PathItemObject {
 		this.addParams({
 			location: 'path',
-			sanitizer: endpoint.getParamsSanitizer(),
+			sanitizer: endpoint.params,
 			example: endpoint.paramsExample,
 		});
 
 		this.addParams({
 			location: 'query',
-			sanitizer: endpoint.getQuerySanitizer(),
+			sanitizer: endpoint.query,
 			example: endpoint.queryExample,
 		});
 
 		this.addParams({
 			location: 'header',
-			sanitizer: endpoint.getHeadersSanitizer(),
+			sanitizer: endpoint.headers,
 			example: endpoint.headersExample,
 		});
 
 		let requestBody: RequestBodyObject | undefined = undefined;
-		const bodySanitizer = endpoint.getBodySanitizer();
+		const bodySanitizer = endpoint.body;
 
 		if (bodySanitizer && bodySanitizer.schema) {
 			requestBody = {

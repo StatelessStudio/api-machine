@@ -12,7 +12,7 @@ export class OasEndpointComponentConverter {
 
 	// Return a map of schema name -> SchemaObject for the endpoint
 	public getSchemas(endpoint: BaseApiEndpoint): Record<string, SchemaObject> {
-		const bodySanitizer = endpoint.getBodySanitizer();
+		const bodySanitizer = endpoint.body;
 
 		if (bodySanitizer) {
 			this.addSchema({

@@ -11,10 +11,6 @@ describe('OasEndpointConverter', () => {
 			getName: () => 'testEndpoint',
 			description: 'desc',
 			getTag: () => 'tag',
-			getParamsSanitizer: () => undefined,
-			getQuerySanitizer: () => undefined,
-			getHeadersSanitizer: () => undefined,
-			getBodySanitizer: () => undefined,
 			getErrors: () => ({
 				missing_message: {
 					getStatusCode: () => 400,

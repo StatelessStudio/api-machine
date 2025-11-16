@@ -19,10 +19,6 @@ describe('OAS Authentication Integration', () => {
 				getName: () => 'testEndpoint',
 				description: 'Test endpoint',
 				getTag: () => 'tests',
-				getParamsSanitizer: () => undefined,
-				getQuerySanitizer: () => undefined,
-				getHeadersSanitizer: () => undefined,
-				getBodySanitizer: () => undefined,
 				getErrors: () => ({}),
 			};
 
@@ -44,10 +40,6 @@ describe('OAS Authentication Integration', () => {
 				getName: () => 'publicEndpoint',
 				description: 'Public endpoint',
 				getTag: () => 'public',
-				getParamsSanitizer: () => undefined,
-				getQuerySanitizer: () => undefined,
-				getHeadersSanitizer: () => undefined,
-				getBodySanitizer: () => undefined,
 				getErrors: () => ({}),
 			};
 
@@ -69,10 +61,6 @@ describe('OAS Authentication Integration', () => {
 				getName: () => 'inheritedEndpoint',
 				description: 'Inherited auth endpoint',
 				getTag: () => 'inherited',
-				getParamsSanitizer: () => undefined,
-				getQuerySanitizer: () => undefined,
-				getHeadersSanitizer: () => undefined,
-				getBodySanitizer: () => undefined,
 				getErrors: () => ({}),
 			};
 
@@ -100,10 +88,6 @@ describe('OAS Authentication Integration', () => {
 				getName: () => 'adminEndpoint',
 				description: 'Admin endpoint',
 				getTag: () => 'admin',
-				getParamsSanitizer: () => undefined,
-				getQuerySanitizer: () => undefined,
-				getHeadersSanitizer: () => undefined,
-				getBodySanitizer: () => undefined,
 				getErrors: () => ({}),
 			};
 
@@ -130,10 +114,6 @@ describe('OAS Authentication Integration', () => {
 				getName: () => 'testEndpoint',
 				description: 'Test description',
 				getTag: () => 'TestTag',
-				getParamsSanitizer: () => undefined,
-				getQuerySanitizer: () => undefined,
-				getHeadersSanitizer: () => undefined,
-				getBodySanitizer: () => undefined,
 				getErrors: () => ({}),
 			};
 
@@ -164,22 +144,6 @@ describe('OAS Authentication Integration', () => {
 
 				override getEffectiveAuthentication() {
 					return auth;
-				}
-
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
-					return undefined;
 				}
 
 				override getErrors() {
@@ -219,22 +183,6 @@ describe('OAS Authentication Integration', () => {
 					return auth;
 				}
 
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
-					return undefined;
-				}
-
 				override getErrors() {
 					return {};
 				}
@@ -252,22 +200,6 @@ describe('OAS Authentication Integration', () => {
 
 				override getEffectiveAuthentication() {
 					return auth;
-				}
-
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
-					return undefined;
 				}
 
 				override getErrors() {
@@ -301,22 +233,6 @@ describe('OAS Authentication Integration', () => {
 					return null;
 				}
 
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
-					return undefined;
-				}
-
 				override getErrors() {
 					return {};
 				}
@@ -343,22 +259,6 @@ describe('OAS Authentication Integration', () => {
 				override fullPath = '/inherited';
 
 				override getEffectiveAuthentication() {
-					return undefined;
-				}
-
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
 					return undefined;
 				}
 
@@ -395,22 +295,6 @@ describe('OAS Authentication Integration', () => {
 
 				override getEffectiveAuthentication() {
 					return auth;
-				}
-
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
-					return undefined;
 				}
 
 				override getErrors() {
@@ -458,22 +342,6 @@ describe('OAS Authentication Integration', () => {
 					return undefined;
 				}
 
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
-					return undefined;
-				}
-
 				override getErrors() {
 					return {};
 				}
@@ -509,22 +377,6 @@ describe('OAS Authentication Integration', () => {
 				override fullPath = '/test';
 
 				override getEffectiveAuthentication() {
-					return undefined;
-				}
-
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
 					return undefined;
 				}
 
@@ -575,22 +427,6 @@ describe('OAS Authentication Integration', () => {
 					return auth1;
 				}
 
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
-					return undefined;
-				}
-
 				override getErrors() {
 					return {};
 				}
@@ -608,22 +444,6 @@ describe('OAS Authentication Integration', () => {
 
 				override getEffectiveAuthentication() {
 					return auth2;
-				}
-
-				override getParamsSanitizer() {
-					return undefined;
-				}
-
-				override getQuerySanitizer() {
-					return undefined;
-				}
-
-				override getHeadersSanitizer() {
-					return undefined;
-				}
-
-				override getBodySanitizer() {
-					return undefined;
 				}
 
 				override getErrors() {
@@ -676,10 +496,6 @@ describe('OAS Authentication Integration', () => {
 				getName: () => 'secureEndpoint',
 				description: 'Secure endpoint',
 				getTag: () => 'secure',
-				getParamsSanitizer: () => undefined,
-				getQuerySanitizer: () => undefined,
-				getHeadersSanitizer: () => undefined,
-				getBodySanitizer: () => undefined,
 				getErrors: () => ({ unauthorized: fakeError }),
 			};
 
@@ -704,10 +520,6 @@ describe('OAS Authentication Integration', () => {
 				getName: () => 'userEndpoint',
 				description: 'Get user',
 				getTag: () => 'users',
-				getParamsSanitizer: () => undefined,
-				getQuerySanitizer: () => undefined,
-				getHeadersSanitizer: () => undefined,
-				getBodySanitizer: () => undefined,
 				getErrors: () => ({}),
 			};
 
