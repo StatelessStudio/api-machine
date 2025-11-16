@@ -98,9 +98,7 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 		response: ApiResponse,
 		next: ApiNextFunction
 	): Promise<ApiResponseData> {
-		// Validate request parts (body, query, params, headers)
-		// 	if sanitizers are present
-		await validateRequest(this, request);
+		await this.checkRequest(request);
 		const data = await this.handle(request, response, next);
 
 		return response.send(data);
@@ -111,6 +109,12 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 		response: ApiResponse,
 		next: ApiNextFunction
 	): Promise<ApiResponseData>;
+
+	public async checkRequest(request: ApiRequest): Promise<void> {
+		// Validate request parts (body, query, params, headers)
+		// 	if sanitizers are present
+		await validateRequest(this, request);
+	}
 }
 
 export type ApiEndpoint = { new (): BaseApiEndpoint };
