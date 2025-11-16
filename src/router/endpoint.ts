@@ -27,6 +27,7 @@ export enum EndpointMethod {
 }
 
 export abstract class BaseApiEndpoint extends BaseApiRoute {
+	override routeType = 'endpoint' as const;
 	override path = '';
 	public tag?: string;
 	public method: EndpointMethod = EndpointMethod.GET;

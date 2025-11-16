@@ -174,15 +174,17 @@ export abstract class RestServer {
 				next: express.NextFunction
 			) => {
 				// Handle HTTPError instances
-				if (error instanceof HTTPError) {
+				if ((error as HTTPError).isApiMachineError) {
 					// Set custom headers if provided
-					Object.entries(error.headers).forEach(([key, value]) => {
-						response.setHeader(key, value);
-					});
+					Object.entries((error as HTTPError).headers).forEach(
+						([key, value]) => {
+							response.setHeader(key, value);
+						}
+					);
 
 					return response
-						.status(error.getStatusCode())
-						.json(error.getResponseJson());
+						.status((error as HTTPError).getStatusCode())
+						.json((error as HTTPError).getResponseJson());
 				}
 
 				if (

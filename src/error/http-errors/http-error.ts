@@ -5,6 +5,7 @@ import { HttpErrorOptions } from '../error-options';
  * All HTTP errors extend from this class
  */
 export abstract class HTTPError extends Error {
+	public isApiMachineError = true;
 	public readonly options: HttpErrorOptions = {};
 	public readonly timestamp = new Date().toISOString();
 

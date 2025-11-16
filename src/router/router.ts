@@ -3,6 +3,7 @@ import { ApiRoute, BaseApiRoute } from './base';
 import { BaseApiEndpoint, EndpointMethod } from './endpoint';
 
 export abstract class BaseApiRouter extends BaseApiRoute {
+	override routeType = 'router' as const;
 	protected router: ExpressRouter;
 
 	public registeredRoutes: BaseApiRoute[] = [];
@@ -45,8 +46,8 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 			// Set parent relationship for authentication cascading
 			instance.parentRoute = this;
 
-			if (instance instanceof BaseApiEndpoint) {
-				instance.tag = tag;
+			if (instance.routeType === 'endpoint') {
+				(instance as BaseApiEndpoint).tag = tag;
 			}
 
 			await instance.register(this.router, this.fullPath);
@@ -54,14 +55,16 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 			this.registeredRoutes.push(instance);
 
 			// Track endpoint methods for 405 handling
-			if (instance instanceof BaseApiEndpoint) {
+			if (instance.routeType === 'endpoint') {
 				const path = instance.path;
 
 				if (!pathMethods.has(path)) {
 					pathMethods.set(path, new Set());
 				}
 
-				pathMethods.get(path)!.add(instance.method);
+				pathMethods
+					.get(path)!
+					.add((instance as BaseApiEndpoint).method);
 			}
 		}
 

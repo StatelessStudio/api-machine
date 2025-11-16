@@ -59,11 +59,11 @@ export class OasRestServerConverter {
 
 	public async convertRouter(router: BaseApiRouter) {
 		for (const route of router.registeredRoutes) {
-			if (route instanceof BaseApiEndpoint) {
-				await this.convertEndpoint(route);
+			if (route.routeType === 'endpoint') {
+				await this.convertEndpoint(route as BaseApiEndpoint);
 			}
-			else if (route instanceof BaseApiRouter) {
-				await this.convertRouter(route);
+			else if (route.routeType === 'router') {
+				await this.convertRouter(route as BaseApiRouter);
 			}
 		}
 	}
