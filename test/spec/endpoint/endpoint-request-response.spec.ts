@@ -12,7 +12,7 @@ describe('Request and Response Handling', function () {
 				body: JSON.stringify({}),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 			expect(response.headers.get('X-Powered-By')).toBeNull();
 		});
 
@@ -23,7 +23,7 @@ describe('Request and Response Handling', function () {
 				body: JSON.stringify({}),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 
 			// Verify global security headers
 			expect(response.headers.get('X-Content-Type-Options')).toBe(
@@ -42,7 +42,7 @@ describe('Request and Response Handling', function () {
 				body: JSON.stringify({}),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 			expect(
 				response.headers.get('Strict-Transport-Security')
 			).toBeNull();
@@ -64,7 +64,7 @@ describe('Request and Response Handling', function () {
 				body: JSON.stringify(requestBody),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 
 			const data = (await response.json()) as {
 				received: typeof requestBody;
@@ -93,7 +93,7 @@ describe('Request and Response Handling', function () {
 				body: JSON.stringify(requestBody),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 
 			const data = (await response.json()) as {
 				received: typeof requestBody;
@@ -116,7 +116,7 @@ describe('Request and Response Handling', function () {
 				body: JSON.stringify(requestBody),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 
 			const data = (await response.json()) as {
 				received: typeof requestBody;
@@ -135,7 +135,7 @@ describe('Request and Response Handling', function () {
 				body: JSON.stringify({}),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 
 			const data = (await response.json()) as {
 				received: Record<string, unknown>;
@@ -157,7 +157,7 @@ describe('Request and Response Handling', function () {
 				body: JSON.stringify({ items: largeArray }),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 
 			const data = (await response.json()) as {
 				received: { items: typeof largeArray };
@@ -322,7 +322,7 @@ describe('Request and Response Handling', function () {
 				body: JSON.stringify({}),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 
 			const data = (await response.json()) as { method: string };
 			expect(data.method).toBe('POST');

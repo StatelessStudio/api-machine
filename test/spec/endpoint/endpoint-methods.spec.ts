@@ -38,7 +38,7 @@ describe('Endpoint Methods', function () {
 				body: JSON.stringify({ name: 'Test' }),
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 
 			const data = (await response.json()) as { id: number };
 			expect(data.id).toBeDefined();
@@ -89,7 +89,7 @@ describe('Endpoint Methods', function () {
 				method: 'DELETE',
 			});
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(204);
 		});
 
 		it('should reject other methods on DELETE endpoint', async function () {
@@ -147,7 +147,7 @@ describe('Endpoint Methods', function () {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ name: 'Test' }),
 			});
-			expect(postResponse.status).toBe(200);
+			expect(postResponse.status).toBe(201);
 
 			// Test that GET on same path works (different endpoint)
 			const getResponse = await fetch(`${baseUrl}/items`);
@@ -181,7 +181,7 @@ describe('Endpoint Methods', function () {
 
 			// DELETE should work
 			const deleteResponse = await fetch(path, { method: 'DELETE' });
-			expect(deleteResponse.status).toBe(200);
+			expect(deleteResponse.status).toBe(204);
 		});
 	});
 });

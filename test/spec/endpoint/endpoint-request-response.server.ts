@@ -159,12 +159,12 @@ export class RequestResponseRouter extends BaseApiRouter {
 			// Redirect with location header
 			class extends GetEndpoint {
 				override path = '/redirect-header';
+				override statusCode = 302;
 
 				override async handle(
 					request: ApiRequest,
 					response: ApiResponse
 				) {
-					response.status(302);
 					response.setHeader(
 						'Location',
 						'/api/request-response/new-location'

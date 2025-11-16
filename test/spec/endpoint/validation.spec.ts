@@ -16,8 +16,7 @@ describe('Validation', function () {
 			}),
 		});
 
-		// TODO: Should be returning 201 Created
-		expect(response.status).toBe(200);
+		expect(response.status).toBe(201);
 
 		const data = (await response.json()) as {
 			name: string;
@@ -126,7 +125,7 @@ describe('Validation', function () {
 			headers: { 'Content-Type': 'application/json' },
 		});
 
-		expect(response.status).toBe(200);
+		expect(response.status).toBe(201);
 		const data = (await response.json()) as { received: number };
 		expect(data.received).toBe(42);
 	});
@@ -140,7 +139,7 @@ describe('Validation', function () {
 			},
 		});
 
-		expect(response.status).toBe(200);
+		expect(response.status).toBe(201);
 		const data = (await response.json()) as { received: string };
 
 		// The header value should be trimmed
@@ -157,8 +156,7 @@ describe('Validation', function () {
 			}),
 		});
 
-		// TODO: Should be returning 201 Created
-		expect(response.status).toBe(200);
+		expect(response.status).toBe(201);
 
 		const data = (await response.json()) as {
 			name: string;

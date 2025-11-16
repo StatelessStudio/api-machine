@@ -101,6 +101,7 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 		await this.checkRequest(request);
 		const data = await this.handle(request, response, next);
 
+		response.status(this.statusCode);
 		return response.send(data);
 	}
 
