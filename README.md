@@ -44,7 +44,7 @@ class MyRouter extends BaseApiRouter {
 	override path = '/api';
 
 	override async routes() {
-		return [HelloEndpoint, UsersRouter];
+		return [HelloEndpoint, /* UsersRouter */];
 	}
 }
 ```
