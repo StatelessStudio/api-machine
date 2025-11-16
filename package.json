@@ -56,13 +56,13 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/api-machine/api-machine.git"
+		"url": "git+https://github.com/StatelessStudio/api-machine.git"
 	},
-	"author": "api-machine",
+	"author": "StatelessStudio",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/api-machine/api-machine/issues"
+		"url": "https://github.com/StatelessStudio/api-machine/issues"
 	},
-	"homepage": "https://github.com/api-machine/api-machine#readme",
+	"homepage": "https://github.com/StatelessStudio/api-machine#readme",
 	"keywords": []
 }
