@@ -49,6 +49,10 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public headersExample?: any;
 
+	public response?: ObjectSanitizer;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public responseExample?: any;
+
 	public getErrors(): { [key: string]: HTTPError } {
 		return {
 			parse: new BadRequestError(),

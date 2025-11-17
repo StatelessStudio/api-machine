@@ -1,6 +1,8 @@
 import { ApiRequest, ApiResponse, GetEndpoint } from '../../../src/index';
 import { NotFoundError } from '../../../src/error';
 import { usersRepo } from './users-repository';
+import { ObjectSanitizer, IntegerValidator, EmailValidator } from 'valsan';
+import { NameValSan } from './name-valsan';
 
 /**
  * Complete Example - Get User Endpoint
@@ -10,6 +12,19 @@ import { usersRepo } from './users-repository';
  */
 export class GetUserEndpoint extends GetEndpoint {
 	override path = '/:id';
+
+	override responseExample = {
+		id: 1,
+		name: 'Alice',
+		email: 'alice@example.com',
+		created: new Date('2023-01-01'),
+	};
+
+	override response = new ObjectSanitizer({
+		id: new IntegerValidator(),
+		name: new NameValSan(),
+		email: new EmailValidator(),
+	});
 
 	async handle(request: ApiRequest, response: ApiResponse) {
 		const userId = parseInt(request.params['id'], 10);

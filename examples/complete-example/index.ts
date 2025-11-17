@@ -37,6 +37,7 @@ const server = new MyServer({
 	port: 3000,
 	maxPayloadSizeMB: 10,
 	log: customLogger,
+	swaggerEnabled: true,
 });
 
 server

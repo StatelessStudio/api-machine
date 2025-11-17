@@ -3,6 +3,7 @@ import {
 	PathItemObject,
 	ParameterObject,
 	RequestBodyObject,
+	ResponsesObject,
 } from 'auto-oas/oas/v3.1';
 
 import { BaseApiEndpoint } from '../router';
@@ -60,9 +61,28 @@ export class OasEndpointConverter {
 		// Use statusCode for response
 		const status = endpoint.statusCode;
 
-		const responses = {
-			[status]: { description: 'Success' },
-		};
+		const responses: ResponsesObject = {};
+
+		// Generate success response with schema if available
+		const responseSanitizer = endpoint.response;
+		if (responseSanitizer && responseSanitizer.schema) {
+			responses[status] = {
+				description: 'Success',
+				content: {
+					'application/json': {
+						schema: {
+							$ref:
+								'#/components/schemas/' +
+								endpoint.getName() +
+								'Response',
+						},
+					},
+				},
+			};
+		}
+		else {
+			responses[status] = { description: 'Success' };
+		}
 
 		const errors = endpoint.getErrors();
 		for (const error in errors) {
