@@ -22,6 +22,16 @@ export class OasEndpointComponentConverter {
 			});
 		}
 
+		const responseSanitizer = endpoint.response;
+
+		if (responseSanitizer) {
+			this.addSchema({
+				name: `${endpoint.name}Response`,
+				sanitizer: responseSanitizer,
+				example: endpoint.responseExample,
+			});
+		}
+
 		return this.schemas;
 	}
 

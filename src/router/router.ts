@@ -50,7 +50,7 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 				(instance as BaseApiEndpoint).tag = tag;
 			}
 
-			await instance.register(this.router, this.fullPath);
+			await this.registerInstance(instance);
 
 			this.registeredRoutes.push(instance);
 
@@ -82,6 +82,10 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 				}
 			});
 		});
+	}
+
+	protected async registerInstance(instance: BaseApiRoute): Promise<void> {
+		await instance.register(this.router, this.fullPath);
 	}
 }
 

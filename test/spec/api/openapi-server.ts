@@ -47,6 +47,14 @@ class CreateUserEndpoint extends PostEndpoint {
 		email: 'john.doe@example.com',
 	};
 
+	override response = new ObjectSanitizer({
+		id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+	});
+
+	override responseExample = {
+		id: 'abc123',
+	};
+
 	async handle(request: ApiRequest) {
 		const id = Math.random().toString(36).slice(2);
 		usersDb[id] = { id, ...request.body };
@@ -80,6 +88,16 @@ class GetUserEndpoint extends GetEndpoint {
 		'x-request-id': 'req-12345',
 	};
 
+	override responseExample = {
+		id: 'abc123',
+		name: 'John Doe',
+		email: 'john.doe@example.com',
+	};
+
+	override response = new ObjectSanitizer({
+		id: idValidator,
+	});
+
 	async handle(request: ApiRequest) {
 		const user = usersDb[request.params['id']];
 
@@ -106,6 +124,20 @@ class ListUsersEndpoint extends GetEndpoint {
 		name: nameValidator.copy({ isOptional: true }),
 		email: emailValidator.copy({ isOptional: true }),
 	});
+
+	override response = new ObjectSanitizer({
+		limit: new RangeValidator({ min: 1, max: 100 }),
+		name: nameValidator,
+		email: emailValidator,
+	});
+
+	override responseExample = [
+		{
+			id: 'abc123',
+			name: 'John Doe',
+			email: 'john.doe@example.com',
+		},
+	];
 
 	async handle(request: ApiRequest) {
 		const users = Object.values(usersDb);

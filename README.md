@@ -1,4 +1,4 @@
-# api-machine - REST API Server Framework
+# API-Machine
 
 A lightweight, TypeScript-first REST API framework built on Express with a class-based routing architecture.
 
@@ -85,82 +85,16 @@ The [`examples/`](examples/) directory contains comprehensive examples:
   - Request body validation
   - Structured error responses
 
-## Configuration
-
-### Server Options
-#### port `number = 5000`
-
-The port number on which the server will listen for incoming requests.
-
-#### maxPayloadSizeMB `number = 10`
-
-Maximum size in megabytes for JSON request payloads that the server will accept.
-
-#### maxUrlEncodedSizeMB `number = 1`
-
-Maximum size in megabytes for URL-encoded request payloads that the server will accept.
-
-#### log `LogInterface = console`
-
-Custom logger interface for handling server logging (e.g. `ts-tiny-log`). Must implement the LogInterface contract.
-
-#### securityHeaders `SecurityHeadersOptions`
-
-Configuration for HTTP security headers. By default, api-machine is **secure by default** with:
-- X-Powered-By header removed (prevents server fingerprinting)
-- X-Content-Type-Options: nosniff (prevents MIME sniffing)
-- X-Frame-Options: DENY (prevents clickjacking)
-- X-XSS-Protection: 1; mode=block (legacy XSS protection)
-
-See **[Security Headers Documentation](docs/security-headers.md)** for detailed configuration options and best practices.
-
 ### Example with Options
 
 ```typescript
-const server = new MyServer({
+const server = new MyApiServer({
   port: 8080,
   maxPayloadSizeMB: 20,
   maxUrlEncodedSizeMB: 2,
   log: myCustomLogger
 });
 ```
-
-## API Summary
-
-### RestServer
-
-Abstract class for creating REST API servers.
-
-**Methods:**
-- `start()`: Starts the server
-- `stop()`: Stops the server
-
-
-### BaseApiRouter
-
-Abstract class for creating route groups.
-
-**Properties:**
-- `path`: The base path for the router (e.g., `/api`)
-
-**Methods:**
-- `routes()`: Abstract method to define endpoints (must be implemented)
-
-### BaseApiEndpoint
-
-Abstract class for creating API endpoints.
-
-**Properties:**
-- `path`: The endpoint path (default: `''`)
-- `method`: The HTTP method (default: `GET`). Can be:
-	- `EndpointMethods.GET`
-	- `EndpointMethods.POST`
-	- `EndpointMethods.PATCH`
-	- `EndpointMethods.PUT`
-	- `EndpointMethods.DELETE`
-
-**Methods:**
-- `handle(request, response, next)`: Abstract method to handle requests (must be implemented)
 
 #### Using Different HTTP Methods
 
@@ -227,55 +161,11 @@ class DeleteUserEndpoint extends DeleteEndpoint {
 }
 ```
 
-**Available Endpoint Classes:**
-- `GetEndpoint` - GET requests (200 OK)
-- `PostEndpoint` - POST requests (201 Created)
-- `PutEndpoint` - PUT requests (200 OK)
-- `PatchEndpoint` - PATCH requests (200 OK)
-- `DeleteEndpoint` - DELETE requests (204 No Content)
-- `HealthCheckEndpoint` - Pre-built health check endpoint (GET /health)
-
-You can also use `BaseApiEndpoint` and manually set the `method` and `statusCode` properties if needed for custom behavior.
-
 #### Pre-Built Endpoints
 
 ##### HealthCheckEndpoint
 
-A ready-to-use health check endpoint that returns system status information. Simply include it in your router:
-
-```typescript
-import { BaseApiRouter, HealthCheckEndpoint } from 'api-machine';
-
-class MyRouter extends BaseApiRouter {
-	override path = '/api';
-	
-	async routes() {
-		return [
-			HealthCheckEndpoint,  // Available at GET /api/health
-			// ... other endpoints
-		];
-	}
-}
-```
-
-**Response Format:**
-```json
-{
-	"status": "ok",
-	"timestamp": "2025-11-08T12:00:00.000Z",
-	"uptime": 123.45,
-	"environment": "development"
-}
-```
-
-**Customizing the Path:**
-```typescript
-class CustomHealthCheck extends HealthCheckEndpoint {
-	override path = '/status';  // Available at GET /api/status
-}
-```
-
-For advanced usage, extending the health check with custom checks, and deployment examples (Kubernetes, Docker, monitoring), see the **[Health Check Endpoint Documentation](docs/health-check-endpoint.md)**.
+A ready-to-use health check endpoint that returns system status information. Simply include it in your router. For advanced usage, extending the health check with custom checks, and deployment examples (Kubernetes, Docker, monitoring), see the **[Health Check Endpoint Documentation](docs/health-check-endpoint.md)**.
 
 ## Error Handling
 
@@ -303,7 +193,7 @@ class GetUserEndpoint extends GetEndpoint {
 ```
 
 **Key Features:**
-- 29 built-in error classes covering HTTP status codes 400-451
+- Built-in error classes covering HTTP status codes 400-451
 - Automatic JSON error responses with timestamps
 - Support for custom headers (e.g., `WWW-Authenticate`, `Retry-After`)
 - Optional `details` field for additional context
@@ -376,7 +266,7 @@ See **[Authentication Documentation](docs/authentication.md)** for complete usag
 
 ## Middleware
 
-Routers and endpoints support Express-style middleware for logging, validation, and more. See [Middleware Support](docs/middleware.md) for usage and examples.
+Routers and endpoints support Express middleware for logging, validation, and more. See [Middleware Support](docs/middleware.md) for usage and examples.
 
 ## Contributing & Development
 

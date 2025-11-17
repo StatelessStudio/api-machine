@@ -1,6 +1,6 @@
 import { ApiRequest, ApiResponse, PostEndpoint } from '../../../src/index';
 import { usersRepo, User } from './users-repository';
-import { ObjectSanitizer, EmailValidator } from 'valsan';
+import { ObjectSanitizer, EmailValidator, IntegerValidator } from 'valsan';
 import { NameValSan } from './name-valsan';
 
 /**
@@ -11,7 +11,25 @@ import { NameValSan } from './name-valsan';
 export class CreateUserEndpoint extends PostEndpoint {
 	override path = '/';
 
+	override bodyExample = {
+		name: 'John Doe',
+		email: 'john@example.com',
+	};
+
 	override body = new ObjectSanitizer({
+		name: new NameValSan(),
+		email: new EmailValidator(),
+	});
+
+	override responseExample = {
+		id: 3,
+		name: 'John Doe',
+		email: 'john@example.com',
+		created: new Date(),
+	};
+
+	override response = new ObjectSanitizer({
+		id: new IntegerValidator(),
 		name: new NameValSan(),
 		email: new EmailValidator(),
 	});
