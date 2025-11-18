@@ -1,6 +1,6 @@
 {
 	"name": "api-machine",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "api-machine",
 	"private": "true",
 	"typescript-template": {
@@ -22,11 +22,11 @@
 		"publish": "npm run script -- publish"
 	},
 	"dependencies": {
-		"auto-oas": "^1.2.1",
+		"auto-oas": "^1.3.0",
 		"cors": "^2.8.5",
 		"express": "^5.1.0",
 		"swagger-ui-express": "^5.0.1",
-		"valsan": "^2.2.0"
+		"valsan": "^2.3.0"
 	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
@@ -52,7 +52,7 @@
 		"typescript": "~5.4.2"
 	},
 	"peerDependencies": {
-		"valsan": "^2.2.0"
+		"valsan": "^2.3.0"
 	},
 	"repository": {
 		"type": "git",

@@ -12,6 +12,7 @@ import {
 	MinValidator,
 	ComposedValSan,
 	TrimSanitizer,
+	ObjectValSan,
 } from 'valsan';
 // eslint-disable-next-line max-len
 import { NameValSan } from '../../../examples/complete-example/users/name-valsan';
@@ -25,11 +26,13 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestHeadersEndpoint extends PostEndpoint {
 				override path = '/headers';
 
-				override headers = new ObjectSanitizer({
-					'x-custom-header': new ComposedValSan([
-						new TrimSanitizer(),
-						new LengthValidator({ minLength: 5 }),
-					]),
+				override headers = new ObjectValSan({
+					schema: {
+						'x-custom-header': new ComposedValSan([
+							new TrimSanitizer(),
+							new LengthValidator({ minLength: 5 }),
+						]),
+					},
 				});
 
 				override async handle(

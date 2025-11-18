@@ -1,4 +1,9 @@
-import { ObjectSanitizer } from 'valsan';
+import {
+	ArrayValSan,
+	ObjectSanitizer,
+	ObjectValSan,
+	ObjectValSanOptions,
+} from 'valsan';
 import { ApiRequest, BaseApiEndpoint } from './endpoint';
 import { UnprocessableEntityError } from '../error';
 
@@ -6,8 +11,11 @@ import { UnprocessableEntityError } from '../error';
  * Runs a valsan ObjectSanitizer on a value,
  *  throws with error details if validation fails.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function runSanitizer(sanitizer: ObjectSanitizer, value: any) {
+export async function runSanitizer(
+	sanitizer: ObjectSanitizer | ObjectValSan | ArrayValSan,
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	value: any
+) {
 	const result = await sanitizer.run(value);
 
 	if (!result.success) {
@@ -33,6 +41,12 @@ export async function validateRequest(
 
 		if (!sanitizer) {
 			continue;
+		}
+
+		if (part === 'headers' && 'options' in sanitizer) {
+			(
+				sanitizer.options as ObjectValSanOptions
+			).allowAdditionalProperties = true;
 		}
 
 		const sanitized = await runSanitizer(sanitizer, request[part]);

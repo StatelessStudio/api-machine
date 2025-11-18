@@ -105,7 +105,7 @@ describe('Validation', function () {
 
 	it('should sanitize query params', async function () {
 		const response = await fetch(
-			baseUrl + '/query-params?age=25&search=test+search   ',
+			baseUrl + '/query-params?search=test+search   ',
 			{
 				method: 'GET',
 				headers: { 'Content-Type': 'application/json' },

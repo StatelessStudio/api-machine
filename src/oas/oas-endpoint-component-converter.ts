@@ -1,4 +1,4 @@
-import { ObjectSanitizer } from 'valsan';
+import { ObjectSanitizer, ObjectValSan, ArrayValSan } from 'valsan';
 import { SchemaObject } from 'auto-oas/oas/v3.1';
 
 import { BaseApiEndpoint } from '../router';
@@ -41,7 +41,7 @@ export class OasEndpointComponentConverter {
 		example,
 	}: {
 		name: string;
-		sanitizer: ObjectSanitizer;
+		sanitizer: ObjectSanitizer | ObjectValSan | ArrayValSan;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		example?: any;
 	}) {
