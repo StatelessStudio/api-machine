@@ -1,4 +1,4 @@
-import { ObjectSanitizer } from 'valsan';
+import { ObjectSanitizer, ObjectValSan } from 'valsan';
 import {
 	PathItemObject,
 	ParameterObject,
@@ -122,7 +122,7 @@ export class OasEndpointConverter {
 		example,
 	}: {
 		location: 'path' | 'query' | 'header';
-		sanitizer?: ObjectSanitizer;
+		sanitizer?: ObjectSanitizer | ObjectValSan;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		example?: any;
 	}) {

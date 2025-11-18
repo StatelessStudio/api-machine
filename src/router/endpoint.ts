@@ -10,6 +10,7 @@ import { ObjectSanitizer } from 'valsan/object-sanitizer';
 import { BaseApiRoute } from './base';
 import { validateRequest } from './validation-middleware';
 import { BadRequestError, HTTPError, UnprocessableEntityError } from '../error';
+import { ArrayValSan, ObjectValSan } from 'valsan';
 
 export type ApiRequest = ExpressRequest;
 export type ApiResponse = ExpressResponse;
@@ -33,23 +34,23 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 	public method: EndpointMethod = EndpointMethod.GET;
 	public statusCode: number = 200;
 
-	public body?: ObjectSanitizer;
+	public body?: ObjectSanitizer | ObjectValSan;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public bodyExample?: any;
 
-	public query?: ObjectSanitizer;
+	public query?: ObjectSanitizer | ObjectValSan;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public queryExample?: any;
 
-	public params?: ObjectSanitizer;
+	public params?: ObjectSanitizer | ObjectValSan;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public paramsExample?: any;
 
-	public headers?: ObjectSanitizer;
+	public headers?: ObjectSanitizer | ObjectValSan;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public headersExample?: any;
 
-	public response?: ObjectSanitizer;
+	public response?: ObjectSanitizer | ObjectValSan | ArrayValSan;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public responseExample?: any;
 

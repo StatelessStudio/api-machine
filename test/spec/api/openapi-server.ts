@@ -1,5 +1,3 @@
-import { ObjectSanitizer } from 'valsan/object-sanitizer';
-
 import { NotFoundError, RestServer } from '../../../src';
 import {
 	BaseApiRouter,
@@ -12,10 +10,12 @@ import {
 } from '../../../src/router';
 
 import {
+	ArrayValSan,
 	ComposedValSan,
 	EmailValidator,
 	IntegerValidator,
 	LengthValidator,
+	ObjectValSan,
 } from 'valsan';
 import { StringToNumberValSan } from 'valsan';
 import { RangeValidator } from 'valsan';
@@ -37,9 +37,11 @@ class CreateUserEndpoint extends PostEndpoint {
 	override path = '/users';
 	override description = 'Creates a new user';
 
-	override body = new ObjectSanitizer({
-		name: nameValidator,
-		email: emailValidator,
+	override body = new ObjectValSan({
+		schema: {
+			name: nameValidator,
+			email: emailValidator,
+		},
 	});
 
 	override bodyExample = {
@@ -47,8 +49,10 @@ class CreateUserEndpoint extends PostEndpoint {
 		email: 'john.doe@example.com',
 	};
 
-	override response = new ObjectSanitizer({
-		id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+	override response = new ObjectValSan({
+		schema: {
+			id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+		},
 	});
 
 	override responseExample = {
@@ -73,15 +77,19 @@ class GetUserEndpoint extends GetEndpoint {
 		};
 	}
 
-	override params = new ObjectSanitizer({
-		id: idValidator,
+	override params = new ObjectValSan({
+		schema: {
+			id: idValidator,
+		},
 	});
 
-	override headers = new ObjectSanitizer({
-		'x-request-id': new LengthValidator({
-			minLength: 5,
-			maxLength: 50,
-		}),
+	override headers = new ObjectValSan({
+		schema: {
+			'x-request-id': new LengthValidator({
+				minLength: 5,
+				maxLength: 50,
+			}),
+		},
 	});
 
 	override headersExample = {
@@ -94,8 +102,10 @@ class GetUserEndpoint extends GetEndpoint {
 		email: 'john.doe@example.com',
 	};
 
-	override response = new ObjectSanitizer({
-		id: idValidator,
+	override response = new ObjectValSan({
+		schema: {
+			id: idValidator,
+		},
 	});
 
 	async handle(request: ApiRequest) {
@@ -112,23 +122,29 @@ class GetUserEndpoint extends GetEndpoint {
 class ListUsersEndpoint extends GetEndpoint {
 	override path = '/users';
 
-	override query = new ObjectSanitizer({
-		limit: new ComposedValSan(
-			[
-				new StringToNumberValSan(),
-				new IntegerValidator(),
-				new RangeValidator({ min: 1, max: 100 }),
-			],
-			{ isOptional: true }
-		),
-		name: nameValidator.copy({ isOptional: true }),
-		email: emailValidator.copy({ isOptional: true }),
+	override query = new ObjectValSan({
+		schema: {
+			limit: new ComposedValSan(
+				[
+					new StringToNumberValSan(),
+					new IntegerValidator(),
+					new RangeValidator({ min: 1, max: 100 }),
+				],
+				{ isOptional: true }
+			),
+			name: nameValidator.copy({ isOptional: true }),
+			email: emailValidator.copy({ isOptional: true }),
+		},
 	});
 
-	override response = new ObjectSanitizer({
-		limit: new RangeValidator({ min: 1, max: 100 }),
-		name: nameValidator,
-		email: emailValidator,
+	override response = new ArrayValSan({
+		schema: new ObjectValSan({
+			schema: {
+				limit: new RangeValidator({ min: 1, max: 100 }),
+				name: nameValidator,
+				email: emailValidator,
+			},
+		}),
 	});
 
 	override responseExample = [
@@ -151,13 +167,17 @@ class ListUsersEndpoint extends GetEndpoint {
 class UpdateUserEndpoint extends PatchEndpoint {
 	override path = '/users/:id';
 
-	override params = new ObjectSanitizer({
-		id: idValidator,
+	override params = new ObjectValSan({
+		schema: {
+			id: idValidator,
+		},
 	});
 
-	override body = new ObjectSanitizer({
-		name: nameValidator.copy({ isOptional: true }),
-		email: emailValidator.copy({ isOptional: true }),
+	override body = new ObjectValSan({
+		schema: {
+			name: nameValidator.copy({ isOptional: true }),
+			email: emailValidator.copy({ isOptional: true }),
+		},
 	});
 
 	override bodyExample = {
@@ -192,8 +212,10 @@ class UpdateUserEndpoint extends PatchEndpoint {
 
 class DeleteUserEndpoint extends DeleteEndpoint {
 	override path = '/users/:id';
-	override params = new ObjectSanitizer({
-		id: idValidator,
+	override params = new ObjectValSan({
+		schema: {
+			id: idValidator,
+		},
 	});
 
 	override getErrors() {
@@ -242,9 +264,11 @@ const postNotFoundError = new NotFoundError('Post not found');
 class CreatePostEndpoint extends PostEndpoint {
 	override path = '/posts';
 
-	override body = new ObjectSanitizer({
-		title: new LengthValidator({ minLength: 2, maxLength: 100 }),
-		content: new LengthValidator({ minLength: 1, maxLength: 1000 }),
+	override body = new ObjectValSan({
+		schema: {
+			title: new LengthValidator({ minLength: 2, maxLength: 100 }),
+			content: new LengthValidator({ minLength: 1, maxLength: 1000 }),
+		},
 	});
 
 	async handle(request: ApiRequest) {
@@ -258,8 +282,10 @@ class CreatePostEndpoint extends PostEndpoint {
 class GetPostEndpoint extends GetEndpoint {
 	override path = '/posts/:id';
 
-	override params = new ObjectSanitizer({
-		id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+	override params = new ObjectValSan({
+		schema: {
+			id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+		},
 	});
 
 	override getErrors() {
@@ -290,13 +316,17 @@ class ListPostsEndpoint extends GetEndpoint {
 class UpdatePostEndpoint extends PutEndpoint {
 	override path = '/posts/:id';
 
-	override params = new ObjectSanitizer({
-		id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+	override params = new ObjectValSan({
+		schema: {
+			id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+		},
 	});
 
-	override body = new ObjectSanitizer({
-		title: new LengthValidator({ minLength: 2, maxLength: 100 }),
-		content: new LengthValidator({ minLength: 1, maxLength: 1000 }),
+	override body = new ObjectValSan({
+		schema: {
+			title: new LengthValidator({ minLength: 2, maxLength: 100 }),
+			content: new LengthValidator({ minLength: 1, maxLength: 1000 }),
+		},
 	});
 
 	override getErrors() {
@@ -323,8 +353,10 @@ class UpdatePostEndpoint extends PutEndpoint {
 class DeletePostEndpoint extends DeleteEndpoint {
 	override path = '/posts/:id';
 
-	override params = new ObjectSanitizer({
-		id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+	override params = new ObjectValSan({
+		schema: {
+			id: new LengthValidator({ minLength: 1, maxLength: 50 }),
+		},
 	});
 
 	override getErrors() {
