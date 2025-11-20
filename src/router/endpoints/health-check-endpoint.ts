@@ -1,7 +1,7 @@
 import {
 	Iso8601TimestampValSan,
 	MinLengthValidator,
-	ObjectSanitizer,
+	ObjectValSan,
 	StringToNumberValSan,
 } from 'valsan';
 import { GetEndpoint } from './get-endpoint';
@@ -16,11 +16,13 @@ export class HealthCheckEndpoint extends GetEndpoint {
 		environment: 'development',
 	};
 
-	override response = new ObjectSanitizer({
-		status: new MinLengthValidator(),
-		timestamp: new Iso8601TimestampValSan(),
-		uptime: new StringToNumberValSan(),
-		environment: new MinLengthValidator(),
+	override response = new ObjectValSan({
+		schema: {
+			status: new MinLengthValidator(),
+			timestamp: new Iso8601TimestampValSan(),
+			uptime: new StringToNumberValSan(),
+			environment: new MinLengthValidator(),
+		},
 	});
 
 	async handle() {
