@@ -212,24 +212,26 @@ For the complete list of error classes, usage examples, and custom error creatio
 
 ## Validation & Sanitization
 
-api-machine supports request validation and sanitization using [valsan](https://www.npmjs.com/package/valsan). You can declare ObjectSanitizer members on your endpoint classes for `body`, `query`, `params`, or `headers`:
+api-machine supports request validation and sanitization using [valsan](https://www.npmjs.com/package/valsan). You can declare ObjectValSan members on your endpoint classes for `body`, `query`, `params`, or `headers`:
 
 ```typescript
-import { ObjectSanitizer, EmailValidator } from 'valsan';
+import { ObjectValSan, EmailValidator } from 'valsan';
 import { NameValSan } from './examples/complete-example/users/name-valsan';
 
 class CreateUserEndpoint extends PostEndpoint {
-  override path = '/users';
+	override path = '/users';
 
-  override body = new ObjectSanitizer({
-    name: new NameValSan(),
-    email: new EmailValidator(),
-  });
+	override body = new ObjectValSan({
+		schema: {
+			name: new NameValSan(),
+			email: new EmailValidator(),
+		}
+	});
 
-  async handle(request, response) {
-    // request.body is validated & sanitized
-    // ...
-  }
+	async handle(request, response) {
+		// request.body is validated & sanitized
+		// ...
+	}
 }
 ```
 

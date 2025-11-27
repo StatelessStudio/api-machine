@@ -1,6 +1,6 @@
 import { ApiRequest, ApiResponse, PostEndpoint } from '../../../src/index';
 import { usersRepo, User } from './users-repository';
-import { ObjectSanitizer, EmailValidator, IntegerValidator } from 'valsan';
+import { ObjectValSan, EmailValidator, IntegerValidator } from 'valsan';
 import { NameValSan } from './name-valsan';
 
 /**
@@ -16,9 +16,11 @@ export class CreateUserEndpoint extends PostEndpoint {
 		email: 'john@example.com',
 	};
 
-	override body = new ObjectSanitizer({
-		name: new NameValSan(),
-		email: new EmailValidator(),
+	override body = new ObjectValSan({
+		schema: {
+			name: new NameValSan(),
+			email: new EmailValidator(),
+		},
 	});
 
 	override responseExample = {
@@ -28,10 +30,12 @@ export class CreateUserEndpoint extends PostEndpoint {
 		created: new Date(),
 	};
 
-	override response = new ObjectSanitizer({
-		id: new IntegerValidator(),
-		name: new NameValSan(),
-		email: new EmailValidator(),
+	override response = new ObjectValSan({
+		schema: {
+			id: new IntegerValidator(),
+			name: new NameValSan(),
+			email: new EmailValidator(),
+		},
 	});
 
 	async handle(request: ApiRequest, response: ApiResponse) {

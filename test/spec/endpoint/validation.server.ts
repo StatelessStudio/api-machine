@@ -5,7 +5,6 @@ import {
 	PostEndpoint,
 } from '../../../src/router';
 import {
-	ObjectSanitizer,
 	EmailValidator,
 	LengthValidator,
 	StringToNumberValSan,
@@ -48,11 +47,13 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestQueryParamsEndpoint extends GetEndpoint {
 				override path = '/query-params';
 
-				override query = new ObjectSanitizer({
-					search: new ComposedValSan([
-						new TrimSanitizer(),
-						new LengthValidator({ minLength: 3 }),
-					]),
+				override query = new ObjectValSan({
+					schema: {
+						search: new ComposedValSan([
+							new TrimSanitizer(),
+							new LengthValidator({ minLength: 3 }),
+						]),
+					},
 				});
 
 				override async handle(
@@ -64,11 +65,13 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestRouteParamsEndpoint extends PostEndpoint {
 				override path = '/route-params/:itemId';
 
-				override params = new ObjectSanitizer({
-					itemId: new ComposedValSan([
-						new StringToNumberValSan(),
-						new MinValidator({ min: 1 }),
-					]),
+				override params = new ObjectValSan({
+					schema: {
+						itemId: new ComposedValSan([
+							new StringToNumberValSan(),
+							new MinValidator({ min: 1 }),
+						]),
+					},
 				});
 
 				override async handle(
@@ -80,9 +83,11 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestBodyEndpoint extends PostEndpoint {
 				override path = '/body';
 
-				override body = new ObjectSanitizer({
-					name: new NameValSan(),
-					email: new EmailValidator(),
+				override body = new ObjectValSan({
+					schema: {
+						name: new NameValSan(),
+						email: new EmailValidator(),
+					},
 				});
 
 				override async handle(
@@ -97,30 +102,38 @@ export class ValidationRouter extends BaseApiRouter {
 			class TestAllValidationEndpoint extends PostEndpoint {
 				override path = '/all/:userId';
 
-				override body = new ObjectSanitizer({
-					name: new NameValSan(),
-					email: new EmailValidator(),
+				override body = new ObjectValSan({
+					schema: {
+						name: new NameValSan(),
+						email: new EmailValidator(),
+					},
 				});
 
-				override query = new ObjectSanitizer({
-					age: new ComposedValSan([
-						new StringToNumberValSan(),
-						new MinValidator({ min: 0 }),
-					]),
+				override query = new ObjectValSan({
+					schema: {
+						age: new ComposedValSan([
+							new StringToNumberValSan(),
+							new MinValidator({ min: 0 }),
+						]),
+					},
 				});
 
-				override params = new ObjectSanitizer({
-					userId: new ComposedValSan([
-						new StringToNumberValSan(),
-						new MinValidator({ min: 1 }),
-					]),
+				override params = new ObjectValSan({
+					schema: {
+						userId: new ComposedValSan([
+							new StringToNumberValSan(),
+							new MinValidator({ min: 1 }),
+						]),
+					},
 				});
 
-				override headers = new ObjectSanitizer({
-					'X-User-Token': new ComposedValSan([
-						new TrimSanitizer(),
-						new LengthValidator({ minLength: 10 }),
-					]),
+				override headers = new ObjectValSan({
+					schema: {
+						'X-User-Token': new ComposedValSan([
+							new TrimSanitizer(),
+							new LengthValidator({ minLength: 10 }),
+						]),
+					},
 				});
 
 				async handle(request: ApiRequest) {
@@ -137,18 +150,20 @@ export class ValidationRouter extends BaseApiRouter {
 			},
 			class OptionalValidationEndpoint extends GetEndpoint {
 				override path = '/optional-validation';
-				override query = new ObjectSanitizer({
-					name: new ComposedValSan(
-						[
-							new TrimSanitizer(),
-							new LengthValidator({ minLength: 3 }),
-						],
-						{ isOptional: true }
-					),
-					email: new ComposedValSan(
-						[new TrimSanitizer(), new EmailValidator()],
-						{ isOptional: true }
-					),
+				override query = new ObjectValSan({
+					schema: {
+						name: new ComposedValSan(
+							[
+								new TrimSanitizer(),
+								new LengthValidator({ minLength: 3 }),
+							],
+							{ isOptional: true }
+						),
+						email: new ComposedValSan(
+							[new TrimSanitizer(), new EmailValidator()],
+							{ isOptional: true }
+						),
+					},
 				});
 
 				override async handle(
