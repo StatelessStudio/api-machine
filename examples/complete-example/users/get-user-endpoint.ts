@@ -1,7 +1,7 @@
 import { ApiRequest, ApiResponse, GetEndpoint } from '../../../src/index';
 import { NotFoundError } from '../../../src/error';
 import { usersRepo } from './users-repository';
-import { ObjectSanitizer, IntegerValidator, EmailValidator } from 'valsan';
+import { IntegerValidator, EmailValidator, ObjectValSan } from 'valsan';
 import { NameValSan } from './name-valsan';
 
 /**
@@ -20,10 +20,12 @@ export class GetUserEndpoint extends GetEndpoint {
 		created: new Date('2023-01-01'),
 	};
 
-	override response = new ObjectSanitizer({
-		id: new IntegerValidator(),
-		name: new NameValSan(),
-		email: new EmailValidator(),
+	override response = new ObjectValSan({
+		schema: {
+			id: new IntegerValidator(),
+			name: new NameValSan(),
+			email: new EmailValidator(),
+		},
 	});
 
 	async handle(request: ApiRequest, response: ApiResponse) {

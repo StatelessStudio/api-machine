@@ -1,6 +1,6 @@
 import 'jasmine';
 import { OasEndpointConverter } from '../../../src/oas/oas-endpoint-converter';
-import { ObjectSanitizer, IntegerValidator, EmailValidator } from 'valsan';
+import { IntegerValidator, EmailValidator, ObjectValSan } from 'valsan';
 import { GetEndpoint } from '../../../src/router/endpoints/get-endpoint';
 import { PostEndpoint } from '../../../src/router/endpoints/post-endpoint';
 import { ApiRequest, ApiResponse, ApiNextFunction } from '../../../src/router';
@@ -18,9 +18,11 @@ describe('OasEndpointConverter - Response Schemas', () => {
 			'response sanitizer is defined',
 		() => {
 			class TestEndpoint extends GetEndpoint {
-				override response = new ObjectSanitizer({
-					id: new IntegerValidator(),
-					email: new EmailValidator(),
+				override response = new ObjectValSan({
+					schema: {
+						id: new IntegerValidator(),
+						email: new EmailValidator(),
+					},
 				});
 
 				override responseExample = {
@@ -84,8 +86,10 @@ describe('OasEndpointConverter - Response Schemas', () => {
 
 	it('respects custom status codes with response ' + 'schemas', () => {
 		class TestEndpoint extends PostEndpoint {
-			override response = new ObjectSanitizer({
-				id: new IntegerValidator(),
+			override response = new ObjectValSan({
+				schema: {
+					id: new IntegerValidator(),
+				},
 			});
 
 			override responseExample = {
@@ -121,8 +125,10 @@ describe('OasEndpointConverter - Response Schemas', () => {
 
 	it('generates both error and success responses', () => {
 		class TestEndpoint extends GetEndpoint {
-			override response = new ObjectSanitizer({
-				id: new IntegerValidator(),
+			override response = new ObjectValSan({
+				schema: {
+					id: new IntegerValidator(),
+				},
 			});
 
 			override responseExample = {
@@ -186,8 +192,10 @@ describe('OasEndpointConverter - Response Schemas', () => {
 
 	it('handles endpoint names with special characters', () => {
 		class MySpecialEndpoint extends GetEndpoint {
-			override response = new ObjectSanitizer({
-				id: new IntegerValidator(),
+			override response = new ObjectValSan({
+				schema: {
+					id: new IntegerValidator(),
+				},
 			});
 
 			override responseExample = {
@@ -219,8 +227,10 @@ describe('OasEndpointConverter - Response Schemas', () => {
 
 	it('preserves error responses when response schema ' + 'is defined', () => {
 		class TestEndpoint extends GetEndpoint {
-			override response = new ObjectSanitizer({
-				id: new IntegerValidator(),
+			override response = new ObjectValSan({
+				schema: {
+					id: new IntegerValidator(),
+				},
 			});
 
 			override responseExample = {

@@ -1,7 +1,7 @@
 import 'jasmine';
 // eslint-disable-next-line max-len
 import { OasEndpointComponentConverter } from '../../../src/oas/oas-endpoint-component-converter';
-import { ObjectSanitizer, IntegerValidator, EmailValidator } from 'valsan';
+import { IntegerValidator, EmailValidator, ObjectValSan } from 'valsan';
 import { GetEndpoint } from '../../../src/router/endpoints/get-endpoint';
 import { PostEndpoint } from '../../../src/router/endpoints/post-endpoint';
 import { ApiRequest, ApiResponse, ApiNextFunction } from '../../../src/router';
@@ -15,9 +15,11 @@ describe('OasEndpointComponentConverter - Response Schemas', () => {
 
 	it('generates response schema from response sanitizer', () => {
 		class TestEndpoint extends GetEndpoint {
-			override response = new ObjectSanitizer({
-				id: new IntegerValidator(),
-				email: new EmailValidator(),
+			override response = new ObjectValSan({
+				schema: {
+					id: new IntegerValidator(),
+					email: new EmailValidator(),
+				},
 			});
 
 			override responseExample = {
@@ -52,8 +54,10 @@ describe('OasEndpointComponentConverter - Response Schemas', () => {
 
 	it('includes response example in schema', () => {
 		class TestEndpoint extends GetEndpoint {
-			override response = new ObjectSanitizer({
-				id: new IntegerValidator(),
+			override response = new ObjectValSan({
+				schema: {
+					id: new IntegerValidator(),
+				},
 			});
 
 			override responseExample = {
@@ -108,16 +112,20 @@ describe('OasEndpointComponentConverter - Response Schemas', () => {
 
 	it('includes both body and response schemas', () => {
 		class TestEndpoint extends PostEndpoint {
-			override body = new ObjectSanitizer({
-				name: new IntegerValidator(),
+			override body = new ObjectValSan({
+				schema: {
+					name: new IntegerValidator(),
+				},
 			});
 
 			override bodyExample = {
 				name: 'test',
 			};
 
-			override response = new ObjectSanitizer({
-				id: new IntegerValidator(),
+			override response = new ObjectValSan({
+				schema: {
+					id: new IntegerValidator(),
+				},
 			});
 
 			override responseExample = {
@@ -148,10 +156,12 @@ describe('OasEndpointComponentConverter - Response Schemas', () => {
 
 	it('generates correct schema structure for complex ' + 'response', () => {
 		class TestEndpoint extends GetEndpoint {
-			override response = new ObjectSanitizer({
-				id: new IntegerValidator(),
-				email: new EmailValidator(),
-				status: new IntegerValidator(),
+			override response = new ObjectValSan({
+				schema: {
+					id: new IntegerValidator(),
+					email: new EmailValidator(),
+					status: new IntegerValidator(),
+				},
 			});
 
 			override responseExample = {

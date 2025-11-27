@@ -8,7 +8,7 @@ import { ApiRequest, BaseApiEndpoint } from './endpoint';
 import { UnprocessableEntityError } from '../error';
 
 /**
- * Runs a valsan ObjectSanitizer on a value,
+ * Runs a valsan ObjectValSan on a value,
  *  throws with error details if validation fails.
  */
 export async function runSanitizer(
@@ -30,7 +30,7 @@ export async function runSanitizer(
 /**
  * Validates and sanitizes request parts
  *  (body, query, params, headers) if the
- *  endpoint defines a ObjectSanitizers
+ *  endpoint defines an ObjectValSan
  */
 export async function validateRequest(
 	endpoint: BaseApiEndpoint,
