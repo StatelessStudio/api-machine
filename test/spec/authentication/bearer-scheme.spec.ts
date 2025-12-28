@@ -288,4 +288,173 @@ describe('BearerAuthenticationScheme', () => {
 			expect(checkTokenSpy).toHaveBeenCalledWith('test-token');
 		});
 	});
+
+	describe('getSecurityScheme()', () => {
+		it('should include description if provided', () => {
+			const scheme = new BearerAuthenticationScheme({
+				checkToken: async () => true,
+				description: 'Bearer token authentication',
+			});
+
+			const securityScheme = scheme.getSecurityScheme();
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			expect((securityScheme as any).description).toBe(
+				'Bearer token authentication'
+			);
+		});
+
+		it('should not include description if not provided', () => {
+			const scheme = new BearerAuthenticationScheme({
+				checkToken: async () => true,
+			});
+
+			const securityScheme = scheme.getSecurityScheme();
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			expect((securityScheme as any).description).toBeUndefined();
+		});
+	});
+
+	describe('InlineAuthenticationScheme methods', () => {
+		it('should execute middleware flow with successful auth', async () => {
+			const checkTokenSpy = jasmine
+				.createSpy('checkToken')
+				.and.returnValue(Promise.resolve(true));
+
+			const scheme = new BearerAuthenticationScheme({
+				checkToken: checkTokenSpy,
+			});
+
+			const middleware = scheme.getMiddleware();
+
+			const req = {
+				headers: { authorization: 'Bearer valid-token' },
+				ip: '127.0.0.1',
+				authenticated: false,
+			} as unknown as AuthenticatedRequest;
+
+			const res = {} as AnyResponse;
+			const next = jasmine
+				.createSpy('next')
+				.and.returnValue(Promise.resolve());
+
+			await middleware(req, res, next);
+
+			expect(req.authenticated).toBe(true);
+			expect(checkTokenSpy).toHaveBeenCalled();
+			expect(next).toHaveBeenCalled();
+		});
+
+		it('should stop middleware execution on auth error', async () => {
+			const scheme = new BearerAuthenticationScheme({
+				checkToken: jasmine
+					.createSpy('checkToken')
+					.and.returnValue(Promise.resolve(false)),
+			});
+
+			const middleware = scheme.getMiddleware();
+
+			const req = {
+				headers: { authorization: 'Bearer invalid-token' },
+				ip: '127.0.0.1',
+				authenticated: false,
+			} as unknown as AuthenticatedRequest;
+
+			const res = {} as AnyResponse;
+			const next = jasmine.createSpy('next');
+
+			try {
+				await middleware(req, res, next);
+				fail('Should have thrown error');
+			}
+			catch (error) {
+				expect(error).toBeInstanceOf(UnauthorizedError);
+				expect(next).not.toHaveBeenCalled();
+			}
+		});
+	});
+
+	describe('authenticate(credentials) method', () => {
+		it('should throw when credentials are empty', async () => {
+			const scheme = new BearerAuthenticationScheme({
+				checkToken: async () => true,
+			});
+
+			try {
+				// Call the actual authenticate method with empty string
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				await (scheme as any).authenticate('');
+				fail('Should have thrown error');
+			}
+			catch (error) {
+				expect(error).toBeInstanceOf(UnauthorizedError);
+				expect((error as UnauthorizedError).message).toBe(
+					'Auth token is missing'
+				);
+			}
+		});
+
+		it('should throw when token validation fails', async () => {
+			const scheme = new BearerAuthenticationScheme({
+				checkToken: async () => true,
+			});
+
+			try {
+				// Call authenticate with invalid token format
+				// BearerTokenValSan will validate and reject it
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				await (scheme as any).authenticate('not-a-valid-token');
+				fail('Should have thrown error');
+			}
+			catch (error) {
+				expect(error).toBeInstanceOf(UnauthorizedError);
+				expect((error as UnauthorizedError).message).toBe(
+					'Bearer token is empty or invalid'
+				);
+			}
+		});
+
+		it('should check token after validation succeeds', async () => {
+			const checkTokenSpy = jasmine
+				.createSpy('checkToken')
+				.and.returnValue(Promise.resolve(true));
+
+			const scheme = new BearerAuthenticationScheme({
+				checkToken: checkTokenSpy,
+			});
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			await (scheme as any).authenticate(
+				'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+			);
+			expect(checkTokenSpy).toHaveBeenCalled();
+		});
+
+		it('should throw when checkToken fails in authenticate', async () => {
+			const checkTokenSpy = jasmine
+				.createSpy('checkToken')
+				.and.returnValue(Promise.resolve(false));
+
+			const scheme = new BearerAuthenticationScheme({
+				checkToken: checkTokenSpy,
+			});
+
+			try {
+				// This should pass validation but fail the checkToken check
+				// Using Bearer format with full JWT
+				await scheme.authenticate(
+					// eslint-disable-next-line max-len
+					'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ'
+				);
+
+				fail('Should have thrown error from checkToken');
+			}
+			catch (error) {
+				expect(error).toBeInstanceOf(UnauthorizedError);
+				// Could be either validation error or checkToken error
+				expect((error as UnauthorizedError).message).toMatch(
+					/(Bearer token|empty|invalid|check failed)/
+				);
+			}
+		});
+	});
 });

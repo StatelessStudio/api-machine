@@ -1,13 +1,19 @@
 import { RequestHandler } from 'express';
-import { AuthenticationScheme } from '../authentication-scheme';
-import { SecuritySchemeObject } from 'auto-oas/oas/v3.1';
 import {
-	bearerAuthenticationMiddleware,
-	BearerAuthenticationMiddlewareOptions,
-} from '../middleware/bearer-authentication';
+	AuthenticationSchemeOptions,
+	InlineAuthenticationScheme,
+} from '../authentication-scheme';
+import { SecuritySchemeObject } from 'auto-oas/oas/v3.1';
+import { UnauthorizedError } from '../../error';
+import { BearerTokenValSan } from 'valsan/primitives';
+import { LogInterface } from '../../log';
+import { AuthenticatedRequest } from '../authenticated-request';
+import { ApiNextFunction, ApiResponse } from '../../router';
 
-export interface BearerAuthenticationSchemeOptions
-	extends BearerAuthenticationMiddlewareOptions {
+export type CheckTokenFunction = (token: string) => Promise<boolean>;
+
+// eslint-disable-next-line max-len
+export interface BearerAuthenticationSchemeOptions extends AuthenticationSchemeOptions {
 	/**
 	 * The name of the security scheme in OpenAPI
 	 * @default 'BearerAuth'
@@ -26,6 +32,17 @@ export interface BearerAuthenticationSchemeOptions
 	 * Appears in the OpenAPI documentation
 	 */
 	description?: string;
+
+	/**
+	 * Function to validate the bearer token
+	 * Should return true if the token is valid, false otherwise
+	 */
+	checkToken: CheckTokenFunction;
+
+	/**
+	 * Optional logger for security events
+	 */
+	log?: LogInterface;
 }
 
 /**
@@ -33,23 +50,22 @@ export interface BearerAuthenticationSchemeOptions
  * Validates the Authorization header with Bearer token
  * Automatically generates OpenAPI security scheme documentation
  */
-export class BearerAuthenticationScheme extends AuthenticationScheme {
+export class BearerAuthenticationScheme extends InlineAuthenticationScheme {
 	public readonly type = 'http' as const;
 	public readonly schemeName: string;
 
-	private readonly bearerFormat: string;
-	private readonly description?: string;
-	private readonly middlewareOptions: BearerAuthenticationMiddlewareOptions;
+	protected readonly bearerFormat: string;
+	protected readonly description?: string;
+	protected readonly checkToken: CheckTokenFunction;
+	protected readonly log?: LogInterface;
 
 	constructor(options: BearerAuthenticationSchemeOptions) {
-		super();
+		super(options);
 		this.schemeName = options.schemeName || 'BearerAuth';
 		this.bearerFormat = options.bearerFormat || 'JWT';
 		this.description = options.description;
-		this.middlewareOptions = {
-			checkToken: options.checkToken,
-			log: options.log,
-		};
+		this.checkToken = options.checkToken;
+		this.log = options.log;
 	}
 
 	public getSecurityScheme(): SecuritySchemeObject {
@@ -66,7 +82,96 @@ export class BearerAuthenticationScheme extends AuthenticationScheme {
 		return scheme;
 	}
 
-	public getMiddleware(): RequestHandler {
-		return bearerAuthenticationMiddleware(this.middlewareOptions);
+	public override getMiddleware(): RequestHandler {
+		return async (
+			request: AuthenticatedRequest,
+			response: ApiResponse,
+			next: ApiNextFunction
+		) => {
+			const authHeader =
+				request.headers['authorization'] ||
+				request.headers['Authorization'];
+
+			if (!authHeader) {
+				const msg =
+					'Unauthorized access attempt from ' +
+					request.ip +
+					' - No token provided';
+				this.log?.warn(msg);
+
+				throw new UnauthorizedError('Authorization header is missing', {
+					scheme: 'Bearer',
+				});
+			}
+
+			const validationResult = await new BearerTokenValSan().run(
+				authHeader
+			);
+			let token: string;
+
+			if (validationResult.success) {
+				token = validationResult.data!;
+			}
+			else {
+				// eslint-disable-next-line max-len
+				const msg =
+					'Unauthorized access attempt from ' +
+					request.ip +
+					' - Invalid token format';
+				const details = JSON.stringify(
+					validationResult.errors,
+					null,
+					2
+				);
+				this.log?.warn(msg, details);
+
+				throw new UnauthorizedError(
+					'Bearer token is empty or invalid',
+					{
+						scheme: 'Bearer',
+						details: validationResult.errors,
+					}
+				);
+			}
+
+			if (!(await this.checkToken(token))) {
+				// eslint-disable-next-line max-len
+				const msg =
+					'Unauthorized access attempt from ' +
+					request.ip +
+					' - Check token failed';
+				this.log?.warn(msg);
+
+				throw new UnauthorizedError('Bearer token check failed', {
+					scheme: 'Bearer',
+				});
+			}
+
+			request.authenticated = true;
+			return next();
+		};
+	}
+
+	public async authenticate(credentials: string): Promise<void> {
+		if (!credentials) {
+			throw new UnauthorizedError('Auth token is missing', {
+				scheme: 'Bearer',
+			});
+		}
+
+		const validationResult = await new BearerTokenValSan().run(credentials);
+
+		if (!validationResult.success) {
+			throw new UnauthorizedError('Bearer token is empty or invalid', {
+				scheme: 'Bearer',
+				details: validationResult.errors,
+			});
+		}
+
+		if (!(await this.checkToken(credentials))) {
+			throw new UnauthorizedError('Bearer token check failed', {
+				scheme: 'Bearer',
+			});
+		}
 	}
 }

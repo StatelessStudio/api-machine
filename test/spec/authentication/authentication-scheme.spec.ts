@@ -2,8 +2,45 @@ import 'jasmine';
 import {
 	AuthenticationScheme,
 	BearerAuthenticationScheme,
+	InlineAuthenticationScheme,
 } from '../../../src/authentication';
-import { ApiNextFunction, ApiRequest, ApiResponse } from '../../../src';
+import {
+	ApiNextFunction,
+	ApiRequest,
+	ApiResponse,
+	AuthenticatedRequest,
+} from '../../../src';
+import { RequestHandler } from 'express';
+import { UnauthorizedError } from '../../../src/error';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyResponse = any;
+
+/**
+ * Test implementation of InlineAuthenticationScheme
+ */
+class TestInlineScheme extends InlineAuthenticationScheme {
+	readonly schemeName = 'TestInline';
+	readonly type = 'http' as const;
+	private throwError = false;
+
+	public setThrowError(shouldThrow: boolean): void {
+		this.throwError = shouldThrow;
+	}
+
+	getSecurityScheme() {
+		return { type: 'http' as const, scheme: 'Bearer' };
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	override async authenticate(request: AuthenticatedRequest): Promise<void> {
+		if (this.throwError) {
+			throw new UnauthorizedError('Test auth failed', {
+				scheme: 'Bearer',
+			});
+		}
+	}
+}
 
 describe('AuthenticationScheme (Base Class)', () => {
 	describe('Interface Contract', () => {
@@ -16,12 +53,17 @@ describe('AuthenticationScheme (Base Class)', () => {
 					return { type: 'http' as const, scheme: 'test' };
 				}
 
-				getMiddleware() {
-					return (
+				// eslint-disable-next-line
+				override async authenticate(request: any): Promise<void> {}
+				override getMiddleware(): RequestHandler {
+					return async (
 						request: ApiRequest,
 						response: ApiResponse,
 						next: ApiNextFunction
-					) => next();
+					) => {
+						await this.authenticate(request);
+						return next();
+					};
 				}
 			}
 
@@ -47,6 +89,61 @@ describe('AuthenticationScheme (Base Class)', () => {
 			});
 
 			expect(scheme.type).toBe('http');
+		});
+	});
+
+	describe('InlineAuthenticationScheme', () => {
+		it('should execute getMiddleware with authentication', async () => {
+			const scheme = new TestInlineScheme();
+			const middleware = scheme.getMiddleware();
+
+			const req = { authenticated: false } as AuthenticatedRequest;
+			const res = {} as AnyResponse;
+			const next = jasmine
+				.createSpy('next')
+				.and.returnValue(Promise.resolve());
+
+			await middleware(req, res, next);
+
+			expect(req.authenticated).toBe(true);
+			expect(next).toHaveBeenCalled();
+		});
+
+		it('should propagate authentication errors', async () => {
+			const scheme = new TestInlineScheme();
+			scheme.setThrowError(true);
+
+			const middleware = scheme.getMiddleware();
+
+			const req = { authenticated: false } as AuthenticatedRequest;
+			const res = {} as AnyResponse;
+			const next = jasmine.createSpy('next');
+
+			try {
+				await middleware(req, res, next);
+				fail('Should have thrown error');
+			}
+			catch (error) {
+				expect(error).toBeInstanceOf(UnauthorizedError);
+				expect(next).not.toHaveBeenCalled();
+				expect(req.authenticated).toBe(false);
+			}
+		});
+
+		it('should call next() after authentication succeeds', async () => {
+			const scheme = new TestInlineScheme();
+			const middleware = scheme.getMiddleware();
+
+			const req = { authenticated: false } as AuthenticatedRequest;
+			const res = {} as AnyResponse;
+			const next = jasmine
+				.createSpy('next')
+				.and.returnValue(Promise.resolve());
+
+			await middleware(req, res, next);
+
+			expect(next).toHaveBeenCalled();
+			expect(req.authenticated).toBe(true);
 		});
 	});
 });

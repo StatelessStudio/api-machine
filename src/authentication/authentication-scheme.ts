@@ -3,6 +3,13 @@ import {
 	SecuritySchemeObject,
 	SecurityRequirementObject,
 } from 'auto-oas/oas/v3.1';
+import { ApiNextFunction, ApiRequest, ApiResponse } from '../router';
+import { SessionDriver } from '../session/session-driver';
+import { Session } from '../session/session';
+import { AuthenticatedRequest } from './authenticated-request';
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface AuthenticationSchemeOptions {}
 
 /**
  * Abstract base class for authentication schemes
@@ -10,6 +17,9 @@ import {
  * with both Express middleware and OpenAPI specification generation
  */
 export abstract class AuthenticationScheme {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	public constructor(options: AuthenticationSchemeOptions = {}) {}
+
 	/**
 	 * Unique name for this authentication scheme
 	 * This will be used as the key in OpenAPI securitySchemes
@@ -42,11 +52,55 @@ export abstract class AuthenticationScheme {
 		return { [this.schemeName]: [] };
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public abstract authenticate(request: any): Promise<void>;
+	public abstract getMiddleware(): RequestHandler;
+}
+
+export abstract class InlineAuthenticationScheme extends AuthenticationScheme {
 	/**
 	 * Generate the Express middleware that enforces this authentication
 	 * The middleware should validate the authentication and throw appropriate
 	 * HTTPError instances if authentication fails
 	 * @returns Express RequestHandler middleware
 	 */
-	public abstract getMiddleware(): RequestHandler;
+	public getMiddleware(): RequestHandler {
+		return async (
+			request: AuthenticatedRequest,
+			response: ApiResponse,
+			next: ApiNextFunction
+		) => {
+			await this.authenticate(request);
+			request.authenticated = true;
+
+			return next();
+		};
+	}
+}
+
+export abstract class SessionAuthenticationScheme extends AuthenticationScheme {
+	protected sessionDriver: SessionDriver;
+
+	public async getSession(request: ApiRequest): Promise<Session> {
+		await this.authenticate(request);
+		return this.sessionDriver.getSession({
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			sessionId: (request as any).sessionId,
+		});
+	}
+
+	public getMiddleware(): RequestHandler {
+		return async (
+			request: ApiRequest,
+			response: ApiResponse,
+			next: ApiNextFunction
+		) => {
+			await this.sessionDriver.checkSession({
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				sessionId: (request as any).sessionId,
+			});
+
+			return next();
+		};
+	}
 }

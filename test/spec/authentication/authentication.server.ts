@@ -1,17 +1,15 @@
-import { bearerAuthenticationMiddleware } from '../../../src/authentication';
+import { BearerAuthenticationScheme } from '../../../src/authentication';
 import { BaseApiEndpoint, BaseApiRouter } from '../../../src/router';
-import { RequestHandler } from 'express';
+import { LogInterface } from '../../../src/log';
 
-// Authentication middleware matching the test expectations
-export const authMiddleware: RequestHandler = bearerAuthenticationMiddleware({
-	checkToken: async (token: string) => token === 'validtoken',
+const testLog: LogInterface = {
+	...console,
 	// eslint-disable-next-line no-console
-	log: { ...console, fatal: console.error },
-});
+	fatal: console.error,
+};
 
 export class AuthenticatedEndpoint extends BaseApiEndpoint {
 	override path = '/test';
-	override middleware = [authMiddleware];
 
 	async handle() {
 		return { ok: true };
@@ -20,7 +18,10 @@ export class AuthenticatedEndpoint extends BaseApiEndpoint {
 
 export class ProtectedRouter extends BaseApiRouter {
 	override path = '/protected';
-	override middleware = [authMiddleware];
+	override authentication = new BearerAuthenticationScheme({
+		checkToken: async (token: string) => token === 'validtoken',
+		log: testLog,
+	});
 
 	async routes() {
 		return [AuthenticatedEndpoint];
