@@ -75,4 +75,6 @@ export abstract class BaseApiRoute {
 	}
 }
 
-export type ApiRoute = { new (): BaseApiRoute };
+export type ApiRoute = new (
+	...params: ConstructorParameters<typeof BaseApiRoute>
+) => BaseApiRoute;

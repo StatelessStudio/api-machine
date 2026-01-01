@@ -241,7 +241,25 @@ class ApiKeyScheme extends InlineAuthenticationScheme {
 
 **Key Methods:**
 - `getAuthFlow()` - Define the authentication flow steps used to obtain a session
+- `getAuthRouter(basePath?)` - Generate a router that automatically exposes all auth steps as API endpoints
 - `getMiddleware()` - Middleware that checks the session on each request (inherited)
+
+**Usage:**
+```typescript
+// Create your session authentication scheme
+const oauth2 = new OAuth2Scheme();
+
+// Include in your main router
+class MainRouter extends BaseApiRouter {
+  async routes() {
+    return [
+      oauth2.getAuthRouter('/auth'), // Auth endpoints
+      SecureApiRouter,         // Protected API (uses oauth2 as authentication)
+      PublicRouter,            // Public endpoints
+    ];
+  }
+}
+```
 
 **Use cases:**
 - OAuth2 with authorization code flow

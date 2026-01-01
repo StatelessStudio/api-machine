@@ -4,6 +4,7 @@ import {
 	AuthFlow,
 	AuthStep,
 } from '../../../src/authentication';
+import { BaseApiRouter } from '../../../src/router';
 import { InMemorySessionDriver } from '../../../src/session';
 import { SessionDriver } from '../../../src/session';
 import { Session } from '../../../src/session/session';
@@ -469,6 +470,147 @@ describe('SessionAuthenticationScheme', () => {
 					);
 				}
 			});
+		});
+	});
+
+	describe('getAuthRouter()', () => {
+		it('should return a router instance', () => {
+			const scheme = new TestSessionScheme();
+			const router = scheme.getAuthRouter();
+
+			expect(router).toBeDefined();
+			expect(router.path).toBe('');
+		});
+
+		it('should set router path from basePath parameter', () => {
+			const scheme = new TestSessionScheme();
+			const router = scheme.getAuthRouter('/auth');
+
+			expect(router.path).toBe('/auth');
+		});
+
+		it('should expose all auth steps as routes', () => {
+			class ChallengeStep extends AuthStep {
+				override path = '/challenge';
+				async handle() {
+					return { challenge: 'test' };
+				}
+			}
+
+			class AuthStep2 extends AuthStep {
+				override path = '/authorize';
+				async handle() {
+					return { code: 'abc123' };
+				}
+			}
+
+			class TokenStep extends AuthStep {
+				override path = '/token';
+				async handle() {
+					return { token: 'xyz789' };
+				}
+			}
+
+			class TestSchemeWithSteps extends SessionAuthenticationScheme {
+				public readonly schemeName = 'TestScheme';
+				public readonly type = 'oauth2' as const;
+
+				public getSecurityScheme(): SecuritySchemeObject {
+					return {
+						type: 'oauth2' as const,
+						flows: {
+							authorizationCode: {
+								authorizationUrl: 'http://example.com/auth',
+								tokenUrl: 'http://example.com/token',
+								scopes: {},
+							},
+						},
+					};
+				}
+
+				public getAuthFlow(): AuthFlow {
+					return {
+						challenge: ChallengeStep,
+						authorize: AuthStep2,
+						token: TokenStep,
+					};
+				}
+			}
+
+			const scheme = new TestSchemeWithSteps();
+			const router = scheme.getAuthRouter('/oauth');
+
+			// Verify router has correct path and is a BaseApiRouter
+			expect(router).toBeDefined();
+			expect(router.path).toBe('/oauth');
+			expect(router).toBeInstanceOf(BaseApiRouter);
+		});
+
+		it('should work with empty basePath', () => {
+			const scheme = new TestSessionScheme();
+			const router = scheme.getAuthRouter();
+
+			expect(router.path).toBe('');
+		});
+
+		it('should return different router instances on each call', () => {
+			const scheme = new TestSessionScheme();
+			const router1 = scheme.getAuthRouter('/auth');
+			const router2 = scheme.getAuthRouter('/auth');
+
+			expect(router1).not.toBe(router2);
+		});
+
+		it('should return auth steps from routes() method', async () => {
+			class ChallengeStep extends AuthStep {
+				override path = '/challenge';
+				async handle() {
+					return { challenge: 'test' };
+				}
+			}
+
+			class TokenStep extends AuthStep {
+				override path = '/token';
+				async handle() {
+					return { token: 'xyz789' };
+				}
+			}
+
+			class TestSchemeWithRoutes extends SessionAuthenticationScheme {
+				public readonly schemeName = 'TestScheme';
+				public readonly type = 'oauth2' as const;
+
+				public getSecurityScheme(): SecuritySchemeObject {
+					return {
+						type: 'oauth2' as const,
+						flows: {
+							authorizationCode: {
+								authorizationUrl: 'http://example.com/auth',
+								tokenUrl: 'http://example.com/token',
+								scopes: {},
+							},
+						},
+					};
+				}
+
+				public getAuthFlow(): AuthFlow {
+					return {
+						challenge: ChallengeStep,
+						token: TokenStep,
+					};
+				}
+			}
+
+			const scheme = new TestSchemeWithRoutes();
+			const router = scheme.getAuthRouter('/auth');
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const routes = await (router as any).routes();
+
+			expect(routes).toBeDefined();
+			expect(routes.length).toBe(2);
+			expect(routes[0]).toBe(ChallengeStep);
+			expect(routes[1]).toBe(TokenStep);
 		});
 	});
 });

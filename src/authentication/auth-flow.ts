@@ -1,4 +1,4 @@
-import { AuthStep } from './auth-step';
+import { AuthStepConstructor } from './auth-step';
 
 /**
  * A named collection of authentication steps
@@ -11,4 +11,4 @@ import { AuthStep } from './auth-step';
  * The flow represents the entire authentication process
  * Steps are executed in the order they're defined
  */
-export type AuthFlow = Record<string, typeof AuthStep>;
+export type AuthFlow = Record<string, AuthStepConstructor>;

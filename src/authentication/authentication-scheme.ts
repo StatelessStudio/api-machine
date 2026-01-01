@@ -3,7 +3,12 @@ import {
 	SecuritySchemeObject,
 	SecurityRequirementObject,
 } from 'auto-oas/oas/v3.1';
-import { ApiNextFunction, ApiRequest, ApiResponse } from '../router';
+import {
+	ApiNextFunction,
+	ApiRequest,
+	ApiResponse,
+	BaseApiRouter,
+} from '../router';
 import { SessionDriver } from '../session/session-driver';
 import { AuthenticatedRequest } from './authenticated-request';
 import { AuthFlow } from './auth-flow';
@@ -102,6 +107,26 @@ export abstract class SessionAuthenticationScheme extends AuthenticationScheme {
 	 * @returns AuthFlow defining all steps in the authentication process
 	 */
 	public abstract getAuthFlow(): AuthFlow;
+
+	/**
+	 * Generate a router that exposes all auth steps as API endpoints
+	 * Each step in the AuthFlow becomes a route in the router
+	 *
+	 * @param basePath - Optional base path for the router (default: empty)
+	 * @returns Router with all auth steps as endpoints
+	 */
+	public getAuthRouter(basePath = ''): BaseApiRouter {
+		const flow = this.getAuthFlow();
+		const steps = Object.values(flow);
+
+		return new (class extends BaseApiRouter {
+			override path = basePath;
+
+			async routes() {
+				return steps;
+			}
+		})();
+	}
 
 	public getMiddleware(): RequestHandler {
 		return async (
