@@ -5,7 +5,7 @@ import { Session } from '../session';
  * In-memory session driver implementation for development and testing
  */
 export class InMemorySessionDriver extends SessionDriver {
-	private sessions: Map<string, Session> = new Map();
+	protected sessions: Map<string, Session> = new Map();
 
 	/**
 	 * Register a session

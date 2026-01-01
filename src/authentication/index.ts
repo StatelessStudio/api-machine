@@ -4,4 +4,6 @@ export {
 	InlineAuthenticationScheme,
 	SessionAuthenticationScheme,
 } from './authentication-scheme';
+export { AuthStep } from './auth-step';
+export { AuthFlow } from './auth-flow';
 export * from './schemes';

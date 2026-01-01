@@ -33,7 +33,15 @@ class TestInlineScheme extends InlineAuthenticationScheme {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	override async authenticate(request: AuthenticatedRequest): Promise<void> {
+	getCredentials(request: ApiRequest): unknown {
+		return {};
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async authenticate(options: {
+		credentials: unknown;
+		request: ApiRequest;
+	}): Promise<void> {
 		if (this.throwError) {
 			throw new UnauthorizedError('Test auth failed', {
 				scheme: 'Bearer',
@@ -54,7 +62,7 @@ describe('AuthenticationScheme (Base Class)', () => {
 				}
 
 				// eslint-disable-next-line
-				override async authenticate(request: any): Promise<void> {}
+				async authenticate(request: any): Promise<void> {}
 				override getMiddleware(): RequestHandler {
 					return async (
 						request: ApiRequest,

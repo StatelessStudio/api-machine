@@ -1,4 +1,3 @@
-import { RequestHandler } from 'express';
 import {
 	AuthenticationSchemeOptions,
 	InlineAuthenticationScheme,
@@ -7,8 +6,7 @@ import { SecuritySchemeObject } from 'auto-oas/oas/v3.1';
 import { UnauthorizedError } from '../../error';
 import { BearerTokenValSan } from 'valsan/primitives';
 import { LogInterface } from '../../log';
-import { AuthenticatedRequest } from '../authenticated-request';
-import { ApiNextFunction, ApiResponse } from '../../router';
+import { ApiRequest } from '../../router';
 
 export type CheckTokenFunction = (token: string) => Promise<boolean>;
 
@@ -82,93 +80,62 @@ export class BearerAuthenticationScheme extends InlineAuthenticationScheme {
 		return scheme;
 	}
 
-	public override getMiddleware(): RequestHandler {
-		return async (
-			request: AuthenticatedRequest,
-			response: ApiResponse,
-			next: ApiNextFunction
-		) => {
-			const authHeader =
-				request.headers['authorization'] ||
-				request.headers['Authorization'];
+	public override getCredentials(request: ApiRequest): unknown {
+		const authHeader =
+			request.headers['authorization'] ||
+			request.headers['Authorization'];
 
-			if (!authHeader) {
-				const msg =
-					'Unauthorized access attempt from ' +
-					request.ip +
-					' - No token provided';
-				this.log?.warn(msg);
+		if (!authHeader) {
+			const msg =
+				'Unauthorized access attempt from ' +
+				request.ip +
+				' - No token provided';
+			this.log?.warn(msg);
 
-				throw new UnauthorizedError('Authorization header is missing', {
-					scheme: 'Bearer',
-				});
-			}
+			throw new UnauthorizedError('Authorization header is missing', {
+				scheme: 'Bearer',
+			});
+		}
 
-			const validationResult = await new BearerTokenValSan().run(
-				authHeader
-			);
-			let token: string;
-
-			if (validationResult.success) {
-				token = validationResult.data!;
-			}
-			else {
-				// eslint-disable-next-line max-len
-				const msg =
-					'Unauthorized access attempt from ' +
-					request.ip +
-					' - Invalid token format';
-				const details = JSON.stringify(
-					validationResult.errors,
-					null,
-					2
-				);
-				this.log?.warn(msg, details);
-
-				throw new UnauthorizedError(
-					'Bearer token is empty or invalid',
-					{
-						scheme: 'Bearer',
-						details: validationResult.errors,
-					}
-				);
-			}
-
-			if (!(await this.checkToken(token))) {
-				// eslint-disable-next-line max-len
-				const msg =
-					'Unauthorized access attempt from ' +
-					request.ip +
-					' - Check token failed';
-				this.log?.warn(msg);
-
-				throw new UnauthorizedError('Bearer token check failed', {
-					scheme: 'Bearer',
-				});
-			}
-
-			request.authenticated = true;
-			return next();
-		};
+		return authHeader;
 	}
 
-	public async authenticate(credentials: string): Promise<void> {
+	public override async authenticate(options: {
+		credentials: string;
+		request: ApiRequest;
+	}): Promise<void> {
+		const { credentials, request } = options;
+
 		if (!credentials) {
-			throw new UnauthorizedError('Auth token is missing', {
+			throw new UnauthorizedError('Authorization header is missing', {
 				scheme: 'Bearer',
 			});
 		}
 
 		const validationResult = await new BearerTokenValSan().run(credentials);
 
-		if (!validationResult.success) {
+		if (!validationResult.success || !validationResult.data) {
+			const msg =
+				'Unauthorized access attempt from ' +
+				request.ip +
+				' - Invalid token format';
+			const details = JSON.stringify(validationResult.errors, null, 2);
+			this.log?.warn(msg, details);
+
 			throw new UnauthorizedError('Bearer token is empty or invalid', {
 				scheme: 'Bearer',
 				details: validationResult.errors,
 			});
 		}
 
-		if (!(await this.checkToken(credentials))) {
+		if (!(await this.checkToken(validationResult.data))) {
+			// eslint-disable-next-line max-len
+			const msg =
+				'Unauthorized access attempt from ' +
+				request.ip +
+				' - Check token failed';
+			this.log?.warn(msg);
+
 			throw new UnauthorizedError('Bearer token check failed', {
 				scheme: 'Bearer',
 			});

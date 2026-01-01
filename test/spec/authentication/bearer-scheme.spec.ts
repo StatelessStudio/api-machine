@@ -3,6 +3,7 @@ import 'jasmine';
 import { BearerAuthenticationScheme } from '../../../src/authentication/schemes/bearer-authentication-scheme';
 import { UnauthorizedError } from '../../../src/error';
 import { AuthenticatedRequest } from '../../../src/authentication';
+import { ApiRequest } from '../../../src';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyResponse = any;
 
@@ -382,13 +383,16 @@ describe('BearerAuthenticationScheme', () => {
 			try {
 				// Call the actual authenticate method with empty string
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				await (scheme as any).authenticate('');
+				await scheme.authenticate({
+					credentials: '',
+					request: {} as ApiRequest,
+				});
 				fail('Should have thrown error');
 			}
 			catch (error) {
 				expect(error).toBeInstanceOf(UnauthorizedError);
 				expect((error as UnauthorizedError).message).toBe(
-					'Auth token is missing'
+					'Authorization header is missing'
 				);
 			}
 		});
@@ -402,7 +406,10 @@ describe('BearerAuthenticationScheme', () => {
 				// Call authenticate with invalid token format
 				// BearerTokenValSan will validate and reject it
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				await (scheme as any).authenticate('not-a-valid-token');
+				await scheme.authenticate({
+					credentials: 'not-a-valid-token',
+					request: {} as ApiRequest,
+				});
 				fail('Should have thrown error');
 			}
 			catch (error) {
@@ -423,9 +430,9 @@ describe('BearerAuthenticationScheme', () => {
 			});
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			await (scheme as any).authenticate(
-				'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
-			);
+			await (scheme as any).authenticate({
+				credentials: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+			});
 			expect(checkTokenSpy).toHaveBeenCalled();
 		});
 
@@ -441,10 +448,12 @@ describe('BearerAuthenticationScheme', () => {
 			try {
 				// This should pass validation but fail the checkToken check
 				// Using Bearer format with full JWT
-				await scheme.authenticate(
-					// eslint-disable-next-line max-len
-					'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ'
-				);
+				await scheme.authenticate({
+					credentials:
+						// eslint-disable-next-line max-len
+						'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ',
+					request: {} as ApiRequest,
+				});
 
 				fail('Should have thrown error from checkToken');
 			}

@@ -5,8 +5,8 @@ import {
 } from 'auto-oas/oas/v3.1';
 import { ApiNextFunction, ApiRequest, ApiResponse } from '../router';
 import { SessionDriver } from '../session/session-driver';
-import { Session } from '../session/session';
 import { AuthenticatedRequest } from './authenticated-request';
+import { AuthFlow } from './auth-flow';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface AuthenticationSchemeOptions {}
@@ -52,12 +52,23 @@ export abstract class AuthenticationScheme {
 		return { [this.schemeName]: [] };
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	public abstract authenticate(request: any): Promise<void>;
+	/**
+	 * Get the Express middleware for this authentication scheme
+	 * For InlineAuthenticationScheme: runs AuthStep
+	 * For SessionAuthenticationScheme: verifies session
+	 *
+	 * @returns Express RequestHandler middleware
+	 */
 	public abstract getMiddleware(): RequestHandler;
 }
 
 export abstract class InlineAuthenticationScheme extends AuthenticationScheme {
+	public abstract getCredentials(request: ApiRequest): unknown;
+	public abstract authenticate(options: {
+		credentials: unknown;
+		request: ApiRequest;
+	}): Promise<void>;
+
 	/**
 	 * Generate the Express middleware that enforces this authentication
 	 * The middleware should validate the authentication and throw appropriate
@@ -70,7 +81,9 @@ export abstract class InlineAuthenticationScheme extends AuthenticationScheme {
 			response: ApiResponse,
 			next: ApiNextFunction
 		) => {
-			await this.authenticate(request);
+			const credentials = this.getCredentials(request);
+			await this.authenticate({ credentials, request });
+
 			request.authenticated = true;
 
 			return next();
@@ -81,17 +94,18 @@ export abstract class InlineAuthenticationScheme extends AuthenticationScheme {
 export abstract class SessionAuthenticationScheme extends AuthenticationScheme {
 	protected sessionDriver: SessionDriver;
 
-	public async getSession(request: ApiRequest): Promise<Session> {
-		await this.authenticate(request);
-		return this.sessionDriver.getSession({
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			sessionId: (request as any).sessionId,
-		});
-	}
+	/**
+	 * Get the authentication flow for this scheme
+	 * An AuthFlow is a named collection of steps
+	 * (e.g., { challenge, authorization, tokenExchange })
+	 *
+	 * @returns AuthFlow defining all steps in the authentication process
+	 */
+	public abstract getAuthFlow(): AuthFlow;
 
 	public getMiddleware(): RequestHandler {
 		return async (
-			request: ApiRequest,
+			request: AuthenticatedRequest,
 			response: ApiResponse,
 			next: ApiNextFunction
 		) => {
@@ -100,6 +114,7 @@ export abstract class SessionAuthenticationScheme extends AuthenticationScheme {
 				sessionId: (request as any).sessionId,
 			});
 
+			request.authenticated = true;
 			return next();
 		};
 	}
