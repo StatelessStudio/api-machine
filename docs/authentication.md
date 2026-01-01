@@ -251,7 +251,6 @@ class ApiKeyScheme extends InlineAuthenticationScheme {
 
 ```typescript
 import { SessionAuthenticationScheme, AuthFlow, AuthStep } from 'api-machine';
-import { ApiRequest, ApiResponse } from 'api-machine';
 
 class OAuth2Scheme extends SessionAuthenticationScheme {
   getSecurityScheme() {
@@ -259,8 +258,8 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
       type: 'oauth2' as const,
       flows: {
         authorizationCode: {
-          authorizationUrl: 'https://provider.com/oauth/authorize',
-          tokenUrl: 'https://provider.com/oauth/token',
+          authorizationUrl: 'http://localhost:4001/auth/challenge',
+          tokenUrl: 'http://localhost:4001/auth/token',
           scopes: { 'read:data': 'Read data' },
         },
       },
@@ -269,28 +268,37 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
   
   getAuthFlow(): AuthFlow {
     return {
-      challenge: {
-        description: 'Generate authorization challenge (PKCE)',
-        async handle(request: ApiRequest, response: ApiResponse) {
+      // Challenge step
+      challenge: class extends AuthStep {
+        override path = '/challenge';
+        override description = 'Generate authorization challenge (PKCE)';
+        
+        override async handle() {
           const challenge = generateChallenge();
           return { challenge };
-        },
+        }
       },
-      authorization: {
-        description: 'User authorizes application at OAuth2 provider',
-        async handle(request: ApiRequest, response: ApiResponse) {
+      // Authorization step
+      authorization: class extends AuthStep {
+        override path = '/authorize';
+        override description = 'User authorizes application at OAuth2 provider';
+        
+        override async handle(request) {
           // User is redirected to provider, returns with authorization code
           const code = request.query.code as string;
           return { code };
-        },
+        }
       },
-      tokenExchange: {
-        description: 'Exchange authorization code for access token and session',
-        async handle(request: ApiRequest, response: ApiResponse) {
+      // Token exchange step
+      tokenExchange: class extends AuthStep {
+        override path = '/token';
+        override description = 'Exchange authorization code for access token and session';
+        
+        override async handle(request) {
           const accessToken = await exchangeCodeForToken(request.body.code);
           const session = await createSession(accessToken);
           return { session };
-        },
+        }
       },
     };
   }
@@ -306,7 +314,41 @@ After a session is obtained through the auth flow, each request:
 
 ## AuthFlow & AuthStep
 
-An `AuthFlow` is a named collection of `AuthStep` objects representing the complete multi-step authentication process used to obtain a session. See [src/authentication/auth-flow.ts](../src/authentication/auth-flow.ts) and [src/authentication/auth-step.ts](../src/authentication/auth-step.ts) for type definitions.
+An `AuthFlow` is a named collection of `AuthStep` classes representing the complete multi-step authentication process used to obtain a session.
+
+**AuthStep** is an abstract class that extends `BaseApiEndpoint`, allowing each step to leverage endpoint features:
+- Request validation (body, query, params, headers via valsan)
+- Middleware support
+- Standardized error handling
+- OpenAPI integration
+
+See [src/authentication/auth-step.ts](../src/authentication/auth-step.ts) and [src/authentication/auth-flow.ts](../src/authentication/auth-flow.ts) for type definitions.
+
+**Typical step responsibilities:**
+- `challenge` - Generate a random challenge or nonce (e.g., PKCE code challenge)
+- `authorization` - Handle user interaction (redirect to OAuth provider, login form, etc.)
+- `tokenExchange` - Exchange credentials for tokens and create a session
+
+**Step example with validation:**
+```typescript
+class TokenExchangeStep extends AuthStep {
+  override path = '/token';
+  override description = 'Exchange code for tokens';
+  
+  // Define request validation just like endpoints
+  override body = new ObjectValSan({
+    schema: {
+      code: new StringValidator(),
+      grantType: new StringValidator(),
+    }
+  });
+  
+  override async handle(request) {
+    // request.body is validated
+    return { accessToken: 'token123' };
+  }
+}
+```
 
 ## Public Routes
 

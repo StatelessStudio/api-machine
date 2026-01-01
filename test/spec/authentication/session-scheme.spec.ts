@@ -2,6 +2,7 @@ import 'jasmine';
 import {
 	SessionAuthenticationScheme,
 	AuthFlow,
+	AuthStep,
 } from '../../../src/authentication';
 import { InMemorySessionDriver } from '../../../src/session';
 import { SessionDriver } from '../../../src/session';
@@ -16,6 +17,9 @@ type AnyResponse = any;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 abstract class TestSessionDriverImport extends SessionDriver {}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+abstract class TestAuthFlowImport extends AuthStep {}
 
 /**
  * Test implementation of SessionAuthenticationScheme
@@ -35,11 +39,11 @@ class TestSessionScheme extends SessionAuthenticationScheme {
 
 	public getAuthFlow(): AuthFlow {
 		return {
-			testStep: {
-				description: 'Test step',
+			testStep: class extends AuthStep {
+				override description = 'Test step';
 				async handle() {
 					return {};
-				},
+				}
 			},
 		};
 	}
@@ -252,11 +256,11 @@ describe('SessionAuthenticationScheme', () => {
 
 				public getAuthFlow(): AuthFlow {
 					return {
-						customStep: {
-							description: 'Custom step',
+						customStep: class extends AuthStep {
+							override description = 'Custom step';
 							async handle() {
 								return {};
-							},
+							}
 						},
 					};
 				}
