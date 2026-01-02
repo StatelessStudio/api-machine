@@ -29,6 +29,12 @@ class TestSessionScheme extends SessionAuthenticationScheme {
 	public readonly schemeName = 'TestSession';
 	public readonly type = 'apiKey' as const;
 
+	public constructor(options: { sessionDriver?: SessionDriver } = {}) {
+		super({
+			sessionDriver: options.sessionDriver || new InMemorySessionDriver(),
+		});
+	}
+
 	public getSecurityScheme(): SecuritySchemeObject {
 		return {
 			type: 'apiKey' as const,
@@ -246,6 +252,16 @@ describe('SessionAuthenticationScheme', () => {
 			class CustomSessionScheme extends SessionAuthenticationScheme {
 				public readonly schemeName = 'CustomSession';
 				public readonly type = 'apiKey' as const;
+
+				public constructor(
+					options: { sessionDriver?: SessionDriver } = {}
+				) {
+					super({
+						sessionDriver:
+							options.sessionDriver ||
+							new InMemorySessionDriver(),
+					});
+				}
 
 				public getSecurityScheme(): SecuritySchemeObject {
 					return {
@@ -515,6 +531,16 @@ describe('SessionAuthenticationScheme', () => {
 				public readonly schemeName = 'TestScheme';
 				public readonly type = 'oauth2' as const;
 
+				public constructor(
+					options: { sessionDriver?: SessionDriver } = {}
+				) {
+					super({
+						sessionDriver:
+							options.sessionDriver ||
+							new InMemorySessionDriver(),
+					});
+				}
+
 				public getSecurityScheme(): SecuritySchemeObject {
 					return {
 						type: 'oauth2' as const,
@@ -580,6 +606,16 @@ describe('SessionAuthenticationScheme', () => {
 				public readonly schemeName = 'TestScheme';
 				public readonly type = 'oauth2' as const;
 
+				public constructor(
+					options: { sessionDriver?: SessionDriver } = {}
+				) {
+					super({
+						sessionDriver:
+							options.sessionDriver ||
+							new InMemorySessionDriver(),
+					});
+				}
+
 				public getSecurityScheme(): SecuritySchemeObject {
 					return {
 						type: 'oauth2' as const,
@@ -611,6 +647,216 @@ describe('SessionAuthenticationScheme', () => {
 			expect(routes.length).toBe(2);
 			expect(routes[0]).toBe(ChallengeStep);
 			expect(routes[1]).toBe(TokenStep);
+		});
+	});
+
+	describe('getEndpoints()', () => {
+		it('should return auth endpoints from the auth flow', () => {
+			class SimpleSessionScheme extends SessionAuthenticationScheme {
+				public readonly schemeName = 'SimpleSession';
+				public readonly type = 'apiKey' as const;
+
+				public constructor(
+					options: { sessionDriver?: SessionDriver } = {}
+				) {
+					super({
+						sessionDriver:
+							options.sessionDriver ||
+							new InMemorySessionDriver(),
+					});
+				}
+
+				public getSecurityScheme(): SecuritySchemeObject {
+					return {
+						type: 'apiKey' as const,
+						name: 'session_id',
+						in: 'cookie' as const,
+					};
+				}
+
+				public getAuthFlow(): AuthFlow {
+					return {
+						login: class extends AuthStep {
+							override path = '/login';
+							override description = 'Login step';
+							async handle() {
+								return { token: 'abc123' };
+							}
+						},
+						logout: class extends AuthStep {
+							override path = '/logout';
+							override description = 'Logout step';
+							async handle() {
+								return { success: true };
+							}
+						},
+					};
+				}
+			}
+
+			const scheme = new SimpleSessionScheme();
+			const endpoints = scheme.getEndpoints();
+
+			expect(endpoints).toBeDefined();
+			expect(Array.isArray(endpoints)).toBe(true);
+			expect(endpoints.length).toBe(2);
+		});
+
+		it('should return auth step classes', () => {
+			class MultiStepScheme extends SessionAuthenticationScheme {
+				public readonly schemeName = 'MultiStep';
+				public readonly type = 'oauth2' as const;
+
+				public constructor(
+					options: { sessionDriver?: SessionDriver } = {}
+				) {
+					super({
+						sessionDriver:
+							options.sessionDriver ||
+							new InMemorySessionDriver(),
+					});
+				}
+
+				public getSecurityScheme(): SecuritySchemeObject {
+					return {
+						type: 'oauth2' as const,
+						flows: {
+							authorizationCode: {
+								authorizationUrl: 'http://example.com/auth',
+								tokenUrl: 'http://example.com/token',
+								scopes: {},
+							},
+						},
+					};
+				}
+
+				public getAuthFlow(): AuthFlow {
+					class Step1 extends AuthStep {
+						override path = '/step1';
+						async handle() {
+							return { step: 1 };
+						}
+					}
+
+					class Step2 extends AuthStep {
+						override path = '/step2';
+						async handle() {
+							return { step: 2 };
+						}
+					}
+
+					class Step3 extends AuthStep {
+						override path = '/step3';
+						async handle() {
+							return { step: 3 };
+						}
+					}
+
+					return {
+						first: Step1,
+						second: Step2,
+						third: Step3,
+					};
+				}
+			}
+
+			const scheme = new MultiStepScheme();
+			const endpoints = scheme.getEndpoints();
+
+			expect(endpoints.length).toBe(3);
+			// All should be AuthStep classes
+			endpoints.forEach((endpoint) => {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				expect(typeof endpoint).toBe('function');
+			});
+		});
+
+		it('should return empty array for empty auth flow', () => {
+			class EmptySessionScheme extends SessionAuthenticationScheme {
+				public readonly schemeName = 'EmptySession';
+				public readonly type = 'apiKey' as const;
+
+				public constructor(
+					options: { sessionDriver?: SessionDriver } = {}
+				) {
+					super({
+						sessionDriver:
+							options.sessionDriver ||
+							new InMemorySessionDriver(),
+					});
+				}
+
+				public getSecurityScheme(): SecuritySchemeObject {
+					return {
+						type: 'apiKey' as const,
+						name: 'session_id',
+						in: 'cookie' as const,
+					};
+				}
+
+				public getAuthFlow(): AuthFlow {
+					return {};
+				}
+			}
+
+			const scheme = new EmptySessionScheme();
+			const endpoints = scheme.getEndpoints();
+
+			expect(Array.isArray(endpoints)).toBe(true);
+			expect(endpoints.length).toBe(0);
+		});
+
+		it('should return endpoints from auth flow', async () => {
+			class MatchingScheme extends SessionAuthenticationScheme {
+				public readonly schemeName = 'Matching';
+				public readonly type = 'apiKey' as const;
+
+				public constructor(
+					options: { sessionDriver?: SessionDriver } = {}
+				) {
+					super({
+						sessionDriver:
+							options.sessionDriver ||
+							new InMemorySessionDriver(),
+					});
+				}
+
+				public getSecurityScheme(): SecuritySchemeObject {
+					return {
+						type: 'apiKey' as const,
+						name: 'session_id',
+						in: 'cookie' as const,
+					};
+				}
+
+				public getAuthFlow(): AuthFlow {
+					return {
+						auth: class extends AuthStep {
+							override path = '/auth';
+							async handle() {
+								return { authenticated: true };
+							}
+						},
+						verify: class extends AuthStep {
+							override path = '/verify';
+							async handle() {
+								return { verified: true };
+							}
+						},
+					};
+				}
+			}
+
+			const scheme = new MatchingScheme();
+			const endpoints = scheme.getEndpoints();
+
+			expect(Array.isArray(endpoints)).toBe(true);
+			expect(endpoints.length).toBe(2);
+			// Verify they are classes/functions
+			endpoints.forEach((endpoint) => {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				expect(typeof endpoint).toBe('function');
+			});
 		});
 	});
 });

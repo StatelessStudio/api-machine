@@ -12,6 +12,7 @@ import {
 import { SessionDriver } from '../session/session-driver';
 import { AuthenticatedRequest } from './authenticated-request';
 import { AuthFlow } from './auth-flow';
+import { ApiRoute } from '../router/base';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface AuthenticationSchemeOptions {}
@@ -99,6 +100,11 @@ export abstract class InlineAuthenticationScheme extends AuthenticationScheme {
 export abstract class SessionAuthenticationScheme extends AuthenticationScheme {
 	protected sessionDriver: SessionDriver;
 
+	public constructor(options: { sessionDriver: SessionDriver }) {
+		super();
+		this.sessionDriver = options.sessionDriver;
+	}
+
 	/**
 	 * Get the authentication flow for this scheme
 	 * An AuthFlow is a named collection of steps
@@ -109,6 +115,16 @@ export abstract class SessionAuthenticationScheme extends AuthenticationScheme {
 	public abstract getAuthFlow(): AuthFlow;
 
 	/**
+	 * Get all endpoints defined in the AuthFlow
+	 *
+	 * @returns ApiRoute array of all auth step endpoints
+	 */
+	public getEndpoints(): Array<ApiRoute> {
+		const flow = this.getAuthFlow();
+		return Object.values(flow);
+	}
+
+	/**
 	 * Generate a router that exposes all auth steps as API endpoints
 	 * Each step in the AuthFlow becomes a route in the router
 	 *
@@ -116,14 +132,13 @@ export abstract class SessionAuthenticationScheme extends AuthenticationScheme {
 	 * @returns Router with all auth steps as endpoints
 	 */
 	public getAuthRouter(basePath = ''): BaseApiRouter {
-		const flow = this.getAuthFlow();
-		const steps = Object.values(flow);
+		const endpoints = this.getEndpoints();
 
 		return new (class extends BaseApiRouter {
 			override path = basePath;
 
 			async routes() {
-				return steps;
+				return endpoints;
 			}
 		})();
 	}

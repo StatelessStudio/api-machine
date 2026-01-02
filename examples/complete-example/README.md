@@ -72,6 +72,51 @@ curl "http://localhost:3000/api/express/search?q=test&page=2&limit=20"
 curl http://localhost:3000/api/health
 ```
 
+### Bearer Token Authentication (Inline, Stateless)
+
+Bearer authentication validates a token on every request without maintaining session state.
+
+```bash
+# Test protected endpoint with valid token
+curl -H "Authorization: Bearer demo-token" \
+  http://localhost:3000/api/bearer/protected
+
+# Test without token (should return 401)
+curl http://localhost:3000/api/bearer/protected
+
+# Public endpoint in bearer router (no auth required)
+curl http://localhost:3000/api/bearer/public
+```
+
+### OAuth2 Session-Based Authentication (Stateful)
+
+Session-based authentication uses a multi-step OAuth2-like flow to obtain a session, then validates it on each request.
+
+```bash
+# Step 1: Get a challenge
+CHALLENGE=$(curl -s -X POST http://localhost:3000/oauth/challenge \
+  -H "Content-Type: application/json" -d '{}' | \
+  grep -o '"challenge":"[^"]*"' | cut -d'"' -f4)
+
+# Step 2: Authorize with credentials
+CODE=$(curl -s -X POST http://localhost:3000/oauth/authorize \
+  -H "Content-Type: application/json" \
+  -d "{\"username\": \"demo\", \"password\": \"demo\", \"challenge\": \"$CHALLENGE\"}" | \
+  grep -o '"code":"[^"]*"' | cut -d'"' -f4)
+
+# Step 3: Exchange code for session
+SESSIONID=$(curl -s -X POST http://localhost:3000/oauth/token \
+  -H "Content-Type: application/json" \
+  -d "{\"code\": \"$CODE\"}" | \
+  grep -o '"sessionId":"[^"]*"' | cut -d'"' -f4)
+
+# Step 4: Access protected resource with session
+curl -s -H "Cookie: sessionId=$SESSIONID" \
+  http://localhost:3000/oauth/protected && echo ""
+
+# Demo credentials: demo/demo or admin/admin
+```
+
 ## Key Points
 
 ### Domain-Driven Organization
@@ -120,6 +165,7 @@ complete-example/
 ├── index.ts                                   # Entry point
 ├── server.ts                                  # Server with custom logger
 ├── router.ts                                  # Main router (groups domain routers)
+├── authentication.ts                          # Bearer and OAuth2 auth schemes
 ├── users/                                     # User management domain
 │   ├── users-router.ts                        # Groups under /api/users
 │   ├── list-users-endpoint.ts                 # GET /api/users
@@ -143,4 +189,24 @@ After completing the quick-start example, this example demonstrates:
 5. How to validate input and handle errors gracefully
 6. How to configure and use custom loggers
 7. How to leverage Express features within your endpoints
-8. Best practices for structuring a production-ready API
+8. How to implement Bearer token authentication (inline, stateless)
+9. How to implement OAuth2 session-based authentication (stateful, multi-step)
+10. Best practices for structuring a production-ready API with authentication
+
+## Authentication Approaches
+
+This example demonstrates two authentication approaches:
+
+### Bearer Token (Inline) Authentication
+- **When to use**: Stateless APIs, JWT validation, API key authentication
+- **How it works**: Token is validated on every request
+- **Credentials**: Bearer token in Authorization header
+- **Session**: None - token itself is the credential
+- **Example**: `authentication.ts` - `BearerAuthRouter`
+
+### OAuth2 Session-Based Authentication
+- **When to use**: Stateful flows, user login, multi-factor auth
+- **How it works**: Multi-step flow to obtain session, then session is validated
+- **Credentials**: Username/password exchanged for session
+- **Session**: Server-side session ID in cookies
+- **Example**: `authentication.ts` - `OAuth2Router` and `oauth2Scheme`

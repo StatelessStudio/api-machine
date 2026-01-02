@@ -12,11 +12,16 @@ import { Log } from 'ts-tiny-log';
  * - Error handling and validation
  * - Custom logger configuration with ts-tiny-log
  * - Express integration (headers, query params)
+ * - Bearer token authentication (inline, stateless)
+ * - OAuth2 session-based authentication (stateful, multi-step)
  *
  * File Structure:
  * - index.ts: Entry point
  * - server.ts: Server class with custom logger
- * - router.ts: Main API router that groups domain routers
+ * - router.ts: Main routers combining API and auth
+ * - auth/: Authentication implementations
+ *   - inline-auth.ts: Bearer token authentication (stateless)
+ *   - session-auth.ts: OAuth2 session-based authentication (stateful)
  * - users/: User management domain
  *   - users-router.ts: Groups all user endpoints under /api/users
  *   - list-users-endpoint.ts: List all users (GET /api/users)
@@ -58,6 +63,21 @@ server
 		log.info(
 			'  GET    http://localhost:3000/api/express/search?q=test&page=1'
 		);
+		log.info('');
+		log.info('Bearer Token Authentication (inline, stateless):');
+		log.info(
+			'  GET    http://localhost:3000/api/bearer/protected ' +
+				'(requires Authorization header)'
+		);
+		log.info('    Header: Authorization: Bearer demo-token');
+		log.info('  GET    http://localhost:3000/api/bearer/public (no auth)');
+		log.info('');
+		log.info('OAuth2 Session-Based Authentication (stateful):');
+		log.info('  POST   http://localhost:3000/oauth/challenge');
+		log.info('  POST   http://localhost:3000/oauth/authorize');
+		log.info('  POST   http://localhost:3000/oauth/token');
+		log.info('  GET    http://localhost:3000/oauth/protected');
+		log.info('  Demo credentials: demo/demo or admin/admin');
 		log.info('');
 		log.info('Health Check:');
 		log.info('  GET    http://localhost:3000/api/health');
