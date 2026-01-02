@@ -2,9 +2,8 @@ import 'jasmine';
 import {
 	SessionAuthenticationScheme,
 	AuthFlow,
-	AuthStep,
 } from '../../../src/authentication';
-import { BaseApiRouter } from '../../../src/router';
+import { BaseApiRouter, BaseApiEndpoint } from '../../../src/router';
 import { InMemorySessionDriver } from '../../../src/session';
 import { SessionDriver } from '../../../src/session';
 import { Session } from '../../../src/session/session';
@@ -20,7 +19,7 @@ type AnyResponse = any;
 abstract class TestSessionDriverImport extends SessionDriver {}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-abstract class TestAuthFlowImport extends AuthStep {}
+abstract class TestAuthFlowImport extends BaseApiEndpoint {}
 
 /**
  * Test implementation of SessionAuthenticationScheme
@@ -46,7 +45,7 @@ class TestSessionScheme extends SessionAuthenticationScheme {
 
 	public getAuthFlow(): AuthFlow {
 		return {
-			testStep: class extends AuthStep {
+			testStep: class extends BaseApiEndpoint {
 				override description = 'Test step';
 				async handle() {
 					return {};
@@ -273,7 +272,7 @@ describe('SessionAuthenticationScheme', () => {
 
 				public getAuthFlow(): AuthFlow {
 					return {
-						customStep: class extends AuthStep {
+						customStep: class extends BaseApiEndpoint {
 							override description = 'Custom step';
 							async handle() {
 								return {};
@@ -506,21 +505,21 @@ describe('SessionAuthenticationScheme', () => {
 		});
 
 		it('should expose all auth steps as routes', () => {
-			class ChallengeStep extends AuthStep {
+			class ChallengeStep extends BaseApiEndpoint {
 				override path = '/challenge';
 				async handle() {
 					return { challenge: 'test' };
 				}
 			}
 
-			class AuthStep2 extends AuthStep {
+			class AuthStep2 extends BaseApiEndpoint {
 				override path = '/authorize';
 				async handle() {
 					return { code: 'abc123' };
 				}
 			}
 
-			class TokenStep extends AuthStep {
+			class TokenStep extends BaseApiEndpoint {
 				override path = '/token';
 				async handle() {
 					return { token: 'xyz789' };
@@ -588,14 +587,14 @@ describe('SessionAuthenticationScheme', () => {
 		});
 
 		it('should return auth steps from routes() method', async () => {
-			class ChallengeStep extends AuthStep {
+			class ChallengeStep extends BaseApiEndpoint {
 				override path = '/challenge';
 				async handle() {
 					return { challenge: 'test' };
 				}
 			}
 
-			class TokenStep extends AuthStep {
+			class TokenStep extends BaseApiEndpoint {
 				override path = '/token';
 				async handle() {
 					return { token: 'xyz789' };
@@ -676,14 +675,14 @@ describe('SessionAuthenticationScheme', () => {
 
 				public getAuthFlow(): AuthFlow {
 					return {
-						login: class extends AuthStep {
+						login: class extends BaseApiEndpoint {
 							override path = '/login';
 							override description = 'Login step';
 							async handle() {
 								return { token: 'abc123' };
 							}
 						},
-						logout: class extends AuthStep {
+						logout: class extends BaseApiEndpoint {
 							override path = '/logout';
 							override description = 'Logout step';
 							async handle() {
@@ -731,21 +730,21 @@ describe('SessionAuthenticationScheme', () => {
 				}
 
 				public getAuthFlow(): AuthFlow {
-					class Step1 extends AuthStep {
+					class Step1 extends BaseApiEndpoint {
 						override path = '/step1';
 						async handle() {
 							return { step: 1 };
 						}
 					}
 
-					class Step2 extends AuthStep {
+					class Step2 extends BaseApiEndpoint {
 						override path = '/step2';
 						async handle() {
 							return { step: 2 };
 						}
 					}
 
-					class Step3 extends AuthStep {
+					class Step3 extends BaseApiEndpoint {
 						override path = '/step3';
 						async handle() {
 							return { step: 3 };
@@ -764,7 +763,7 @@ describe('SessionAuthenticationScheme', () => {
 			const endpoints = scheme.getEndpoints();
 
 			expect(endpoints.length).toBe(3);
-			// All should be AuthStep classes
+			// All should be endpoint classes
 			endpoints.forEach((endpoint) => {
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				expect(typeof endpoint).toBe('function');
@@ -831,13 +830,13 @@ describe('SessionAuthenticationScheme', () => {
 
 				public getAuthFlow(): AuthFlow {
 					return {
-						auth: class extends AuthStep {
+						auth: class extends BaseApiEndpoint {
 							override path = '/auth';
 							async handle() {
 								return { authenticated: true };
 							}
 						},
-						verify: class extends AuthStep {
+						verify: class extends BaseApiEndpoint {
 							override path = '/verify';
 							async handle() {
 								return { verified: true };

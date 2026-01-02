@@ -10,7 +10,6 @@ import {
 	BaseApiEndpoint,
 	SessionAuthenticationScheme,
 	AuthFlow,
-	AuthStep,
 	InMemorySessionDriver,
 	ApiRequest,
 	ApiResponse,
@@ -56,7 +55,7 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
 		/**
 		 * Challenge step - generates a random challenge for CSRF prevention
 		 */
-		class ChallengeStep extends AuthStep {
+		class ChallengeStep extends BaseApiEndpoint {
 			override path = '/challenge';
 			override method = EndpointMethod.POST;
 			override description = 'Generate authentication challenge';
@@ -73,7 +72,7 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
 		/**
 		 * Authorization step - validates credentials
 		 */
-		class AuthorizationStep extends AuthStep {
+		class AuthorizationStep extends BaseApiEndpoint {
 			override path = '/authorize';
 			override method = EndpointMethod.POST;
 			override description = 'Authorize with username and password';
@@ -128,7 +127,7 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
 		/**
 		 * Token exchange step - exchanges code for session
 		 */
-		class TokenStep extends AuthStep {
+		class TokenStep extends BaseApiEndpoint {
 			override path = '/token';
 			override method = EndpointMethod.POST;
 			override description = 'Exchange authorization code for session';

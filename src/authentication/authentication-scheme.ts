@@ -60,7 +60,7 @@ export abstract class AuthenticationScheme {
 
 	/**
 	 * Get the Express middleware for this authentication scheme
-	 * For InlineAuthenticationScheme: runs AuthStep
+	 * For InlineAuthenticationScheme: runs endpoint
 	 * For SessionAuthenticationScheme: verifies session
 	 *
 	 * @returns Express RequestHandler middleware

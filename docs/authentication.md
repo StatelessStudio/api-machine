@@ -268,7 +268,7 @@ class MainRouter extends BaseApiRouter {
 - Session-based systems where session state must be maintained
 
 ```typescript
-import { SessionAuthenticationScheme, AuthFlow, AuthStep } from 'api-machine';
+import { SessionAuthenticationScheme, AuthFlow, BaseApiEndpoint } from 'api-machine';
 
 class OAuth2Scheme extends SessionAuthenticationScheme {
   getSecurityScheme() {
@@ -287,7 +287,7 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
   getAuthFlow(): AuthFlow {
     return {
       // Challenge step
-      challenge: class extends AuthStep {
+      challenge: class extends BaseApiEndpoint {
         override path = '/challenge';
         override description = 'Generate authorization challenge (PKCE)';
         
@@ -297,7 +297,7 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
         }
       },
       // Authorization step
-      authorization: class extends AuthStep {
+      authorization: class extends BaseApiEndpoint {
         override path = '/authorize';
         override description = 'User authorizes application at OAuth2 provider';
         
@@ -308,7 +308,7 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
         }
       },
       // Token exchange step
-      tokenExchange: class extends AuthStep {
+      tokenExchange: class extends BaseApiEndpoint {
         override path = '/token';
         override description = 'Exchange authorization code for access token and session';
         
@@ -330,11 +330,11 @@ After a session is obtained through the auth flow, each request:
 3. Validates the session is not expired
 4. Sets `request.authenticated = true` and allows request to continue
 
-## AuthFlow & AuthStep
+## AuthFlow & BaseApiEndpoint
 
-An `AuthFlow` is a named collection of `AuthStep` classes representing the complete multi-step authentication process used to obtain a session.
+An `AuthFlow` is a named collection of `BaseApiEndpoint` classes representing the complete multi-step authentication process used to obtain a session.
 
-**AuthStep** is an abstract class that extends `BaseApiEndpoint`, allowing each step to leverage endpoint features:
+**BaseApiEndpoint** is the abstract class used for authentication flow steps, allowing each step to leverage endpoint features:
 - Request validation (body, query, params, headers via valsan)
 - Middleware support
 - Standardized error handling
@@ -349,7 +349,7 @@ See [src/authentication/auth-step.ts](../src/authentication/auth-step.ts) and [s
 
 **Step example with validation:**
 ```typescript
-class TokenExchangeStep extends AuthStep {
+class TokenExchangeStep extends BaseApiEndpoint {
   override path = '/token';
   override description = 'Exchange code for tokens';
   
@@ -436,7 +436,7 @@ The authentication module exports the following. See [src/authentication/index.t
 - `AuthenticationScheme` - Base class for all schemes
 - `InlineAuthenticationScheme` - For credential-based auth
 - `SessionAuthenticationScheme` - For stateful multi-step auth
-- `AuthStep` - Interface for auth flow steps
+- `BaseApiEndpoint` - Base class for auth flow steps
 - `AuthFlow` - Type for collections of steps
 - `BearerAuthenticationScheme` - Built-in Bearer token scheme
 - `AuthenticatedRequest` - Request type with auth flag

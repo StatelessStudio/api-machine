@@ -124,4 +124,6 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 	}
 }
 
-export type ApiEndpoint = { new (): BaseApiEndpoint };
+export type ApiEndpoint = new (
+	...params: ConstructorParameters<typeof BaseApiEndpoint>
+) => BaseApiEndpoint;
