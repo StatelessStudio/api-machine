@@ -26,7 +26,6 @@ abstract class TestAuthFlowImport extends BaseApiEndpoint {}
  */
 class TestSessionScheme extends SessionAuthenticationScheme {
 	public readonly schemeName = 'TestSession';
-	public readonly type = 'apiKey' as const;
 
 	public constructor(options: { sessionDriver?: SessionDriver } = {}) {
 		super({
@@ -95,7 +94,7 @@ describe('SessionAuthenticationScheme', () => {
 			const scheme = new TestSessionScheme();
 
 			expect(scheme.schemeName).toBe('TestSession');
-			expect(scheme.type).toBe('apiKey');
+			expect(scheme.getSecurityScheme().type).toBe('apiKey');
 		});
 
 		it('should initialize with session driver', () => {
@@ -250,7 +249,6 @@ describe('SessionAuthenticationScheme', () => {
 		it('should use scheme name in requirement', () => {
 			class CustomSessionScheme extends SessionAuthenticationScheme {
 				public readonly schemeName = 'CustomSession';
-				public readonly type = 'apiKey' as const;
 
 				public constructor(
 					options: { sessionDriver?: SessionDriver } = {}
@@ -528,7 +526,6 @@ describe('SessionAuthenticationScheme', () => {
 
 			class TestSchemeWithSteps extends SessionAuthenticationScheme {
 				public readonly schemeName = 'TestScheme';
-				public readonly type = 'oauth2' as const;
 
 				public constructor(
 					options: { sessionDriver?: SessionDriver } = {}
@@ -603,7 +600,6 @@ describe('SessionAuthenticationScheme', () => {
 
 			class TestSchemeWithRoutes extends SessionAuthenticationScheme {
 				public readonly schemeName = 'TestScheme';
-				public readonly type = 'oauth2' as const;
 
 				public constructor(
 					options: { sessionDriver?: SessionDriver } = {}
@@ -653,7 +649,6 @@ describe('SessionAuthenticationScheme', () => {
 		it('should return auth endpoints from the auth flow', () => {
 			class SimpleSessionScheme extends SessionAuthenticationScheme {
 				public readonly schemeName = 'SimpleSession';
-				public readonly type = 'apiKey' as const;
 
 				public constructor(
 					options: { sessionDriver?: SessionDriver } = {}
@@ -704,7 +699,6 @@ describe('SessionAuthenticationScheme', () => {
 		it('should return auth step classes', () => {
 			class MultiStepScheme extends SessionAuthenticationScheme {
 				public readonly schemeName = 'MultiStep';
-				public readonly type = 'oauth2' as const;
 
 				public constructor(
 					options: { sessionDriver?: SessionDriver } = {}
@@ -773,7 +767,6 @@ describe('SessionAuthenticationScheme', () => {
 		it('should return empty array for empty auth flow', () => {
 			class EmptySessionScheme extends SessionAuthenticationScheme {
 				public readonly schemeName = 'EmptySession';
-				public readonly type = 'apiKey' as const;
 
 				public constructor(
 					options: { sessionDriver?: SessionDriver } = {}
@@ -808,7 +801,6 @@ describe('SessionAuthenticationScheme', () => {
 		it('should return endpoints from auth flow', async () => {
 			class MatchingScheme extends SessionAuthenticationScheme {
 				public readonly schemeName = 'Matching';
-				public readonly type = 'apiKey' as const;
 
 				public constructor(
 					options: { sessionDriver?: SessionDriver } = {}

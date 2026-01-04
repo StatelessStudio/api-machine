@@ -30,7 +30,6 @@ const storedAuthCodes = new Map<
  */
 class OAuth2Scheme extends SessionAuthenticationScheme {
 	public readonly schemeName = 'OAuth2';
-	public readonly type = 'oauth2' as const;
 
 	constructor() {
 		super({ sessionDriver: new InMemorySessionDriver() });

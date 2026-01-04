@@ -21,7 +21,6 @@ type AnyResponse = any;
  */
 class TestInlineScheme extends InlineAuthenticationScheme {
 	readonly schemeName = 'TestInline';
-	readonly type = 'http' as const;
 	private throwError = false;
 
 	public setThrowError(shouldThrow: boolean): void {
@@ -55,7 +54,6 @@ describe('AuthenticationScheme (Base Class)', () => {
 		it('should have required abstract properties', () => {
 			class TestScheme extends AuthenticationScheme {
 				readonly schemeName = 'TestScheme';
-				readonly type = 'http' as const;
 
 				getSecurityScheme() {
 					return { type: 'http' as const, scheme: 'test' };
@@ -77,7 +75,6 @@ describe('AuthenticationScheme (Base Class)', () => {
 
 			const scheme = new TestScheme();
 			expect(scheme.schemeName).toBe('TestScheme');
-			expect(scheme.type).toBe('http');
 		});
 
 		it('should have getSecurityRequirement method', () => {
@@ -96,7 +93,7 @@ describe('AuthenticationScheme (Base Class)', () => {
 				checkToken: async () => true,
 			});
 
-			expect(scheme.type).toBe('http');
+			expect(scheme.getSecurityScheme().type).toBe('http');
 		});
 	});
 

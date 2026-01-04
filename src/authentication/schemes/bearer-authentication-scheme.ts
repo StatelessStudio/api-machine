@@ -49,7 +49,6 @@ export interface BearerAuthenticationSchemeOptions extends AuthenticationSchemeO
  * Automatically generates OpenAPI security scheme documentation
  */
 export class BearerAuthenticationScheme extends InlineAuthenticationScheme {
-	public readonly type = 'http' as const;
 	public readonly schemeName: string;
 
 	protected readonly bearerFormat: string;

@@ -15,7 +15,7 @@ describe('BearerAuthenticationScheme', () => {
 			});
 
 			expect(scheme.schemeName).toBe('BearerAuth');
-			expect(scheme.type).toBe('http');
+			expect(scheme.getSecurityScheme().type).toBe('http');
 		});
 
 		it('should use custom scheme name if provided', () => {

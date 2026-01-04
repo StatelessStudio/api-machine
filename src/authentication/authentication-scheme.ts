@@ -33,15 +33,6 @@ export abstract class AuthenticationScheme {
 	public abstract readonly schemeName: string;
 
 	/**
-	 * The type of security scheme as defined by OpenAPI
-	 */
-	public abstract readonly type:
-		| 'http'
-		| 'apiKey'
-		| 'oauth2'
-		| 'openIdConnect';
-
-	/**
 	 * Generate the OpenAPI security scheme object
 	 * This will be added to components.securitySchemes in the OpenAPI spec
 	 * @returns SecuritySchemeObject compliant with OpenAPI 3.1
