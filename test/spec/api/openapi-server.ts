@@ -109,7 +109,7 @@ class GetUserEndpoint extends GetEndpoint {
 	});
 
 	async handle(request: ApiRequest) {
-		const user = usersDb[request.params['id']];
+		const user = usersDb[request.params['id'] as string];
 
 		if (!user) {
 			throw this.getErrors().not_found;
@@ -192,7 +192,7 @@ class UpdateUserEndpoint extends PatchEndpoint {
 	}
 
 	async handle(request: ApiRequest) {
-		if (!usersDb[request.params['id']]) {
+		if (!usersDb[request.params['id'] as string]) {
 			throw this.getErrors().not_found;
 		}
 
@@ -201,12 +201,12 @@ class UpdateUserEndpoint extends PatchEndpoint {
 			Object.entries(request.body).filter(([_, v]) => v !== undefined)
 		);
 
-		usersDb[request.params['id']] = {
-			...usersDb[request.params['id']],
+		usersDb[request.params['id'] as string] = {
+			...usersDb[request.params['id'] as string],
 			...filteredBody,
 		};
 
-		return usersDb[request.params['id']];
+		return usersDb[request.params['id'] as string];
 	}
 }
 
@@ -226,13 +226,13 @@ class DeleteUserEndpoint extends DeleteEndpoint {
 	}
 
 	async handle(request: ApiRequest) {
-		const deleted = usersDb[request.params['id']];
+		const deleted = usersDb[request.params['id'] as string];
 
 		if (!deleted) {
 			throw this.getErrors().not_found;
 		}
 
-		delete usersDb[request.params['id']];
+		delete usersDb[request.params['id'] as string];
 
 		return {};
 	}
@@ -296,7 +296,7 @@ class GetPostEndpoint extends GetEndpoint {
 	}
 
 	async handle(request: ApiRequest) {
-		const post = postsDb[request.params['id']];
+		const post = postsDb[request.params['id'] as string];
 
 		if (!post) {
 			throw this.getErrors().not_found;
@@ -337,16 +337,16 @@ class UpdatePostEndpoint extends PutEndpoint {
 	}
 
 	async handle(request: ApiRequest) {
-		if (!postsDb[request.params['id']]) {
+		if (!postsDb[request.params['id'] as string]) {
 			throw this.getErrors().not_found;
 		}
 
-		postsDb[request.params['id']] = {
-			...postsDb[request.params['id']],
+		postsDb[request.params['id'] as string] = {
+			...postsDb[request.params['id'] as string],
 			...request.body,
 		};
 
-		return postsDb[request.params['id']];
+		return postsDb[request.params['id'] as string];
 	}
 }
 
@@ -367,13 +367,13 @@ class DeletePostEndpoint extends DeleteEndpoint {
 	}
 
 	async handle(request: ApiRequest) {
-		const deleted = postsDb[request.params['id']];
+		const deleted = postsDb[request.params['id'] as string];
 
 		if (!deleted) {
 			throw this.getErrors().not_found;
 		}
 
-		delete postsDb[request.params['id']];
+		delete postsDb[request.params['id'] as string];
 
 		return {};
 	}

@@ -21,7 +21,7 @@ export class DeleteUserEndpoint extends DeleteEndpoint {
 	}
 
 	async handle(request: ApiRequest, response: ApiResponse) {
-		const userId = parseInt(request.params['id'], 10);
+		const userId = parseInt(request.params['id'] as string, 10);
 		const user = this.usersRepo.getById(userId);
 
 		if (!user) {

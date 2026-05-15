@@ -35,7 +35,7 @@ export class MethodsRouter extends BaseApiRouter {
 				override path = '/items/:id';
 
 				override async handle(request: ApiRequest) {
-					const id = parseInt(request.params['id'], 10);
+					const id = parseInt(request.params['id'] as string, 10);
 					const item = items.find((i) => i.id === id);
 					return item || { id, name: 'Not found', description: '' };
 				}
@@ -70,7 +70,7 @@ export class MethodsRouter extends BaseApiRouter {
 				override path = '/items/:id';
 
 				override async handle(request: ApiRequest) {
-					const id = parseInt(request.params['id'], 10);
+					const id = parseInt(request.params['id'] as string, 10);
 					const index = items.findIndex((i) => i.id === id);
 
 					if (index >= 0) {
@@ -109,7 +109,7 @@ export class MethodsRouter extends BaseApiRouter {
 				override path = '/items/:id';
 
 				override async handle(request: ApiRequest) {
-					const id = parseInt(request.params['id'], 10);
+					const id = parseInt(request.params['id'] as string, 10);
 					const index = items.findIndex((i) => i.id === id);
 
 					if (index >= 0) {
@@ -135,7 +135,7 @@ export class MethodsRouter extends BaseApiRouter {
 				override path = '/items/:id';
 
 				override async handle(request: ApiRequest) {
-					const id = parseInt(request.params['id'], 10);
+					const id = parseInt(request.params['id'] as string, 10);
 					const index = items.findIndex((i) => i.id === id);
 
 					if (index >= 0) {

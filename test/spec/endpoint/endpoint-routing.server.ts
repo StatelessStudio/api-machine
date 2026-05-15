@@ -15,7 +15,11 @@ export class RoutingRouter extends BaseApiRouter {
 				override path = '/items/:id';
 
 				override async handle(request: ApiRequest) {
-					const id = parseInt(request.params['id'], 10);
+					const id = parseInt(
+						request.params['id'] as string,
+						10
+					);
+
 					return { id };
 				}
 			},
@@ -25,8 +29,15 @@ export class RoutingRouter extends BaseApiRouter {
 				override path = '/users/:userId/posts/:postId';
 
 				override async handle(request: ApiRequest) {
-					const userId = parseInt(request.params['userId'], 10);
-					const postId = parseInt(request.params['postId'], 10);
+					const userId = parseInt(
+						request.params['userId'] as string,
+						10
+					);
+					const postId = parseInt(
+						request.params['postId'] as string,
+						10
+					);
+
 					return { userId, postId };
 				}
 			},
@@ -63,7 +74,11 @@ export class RoutingRouter extends BaseApiRouter {
 				override path = '/users/:userId/activity';
 
 				override async handle(request: ApiRequest) {
-					const userId = parseInt(request.params['userId'], 10);
+					const userId = parseInt(
+						request.params['userId'] as string,
+						10
+					);
+
 					return { userId, query: request.query };
 				}
 			},

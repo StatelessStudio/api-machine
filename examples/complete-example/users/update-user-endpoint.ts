@@ -16,7 +16,7 @@ export class UpdateUserEndpoint extends PutEndpoint {
 	}
 
 	async handle(request: ApiRequest) {
-		const userId = parseInt(request.params['id'], 10);
+		const userId = parseInt(request.params['id'] as string, 10);
 
 		// Update user properties
 		const { name, email } = request.body;
