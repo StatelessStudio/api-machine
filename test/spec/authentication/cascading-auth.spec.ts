@@ -1,4 +1,5 @@
 import 'jasmine';
+import { Router as ExpressRouter } from 'express';
 import { BaseApiEndpoint } from '../../../src/router/endpoint';
 import { BaseApiRouter } from '../../../src/router/router';
 import { BearerAuthenticationScheme } from '../../../src/authentication';
@@ -20,7 +21,7 @@ describe('Authentication Cascading', () => {
 	});
 
 	describe('getEffectiveAuthentication()', () => {
-		it('endpoint auth overrides router and server', () => {
+		it('endpoint auth overrides router and server', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override authentication = endpointAuth;
 
@@ -29,67 +30,93 @@ describe('Authentication Cascading', () => {
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			endpoint.parentRoute = { authentication: routerAuth } as any;
+			class TestRouter extends BaseApiRouter {
+				override authentication = routerAuth;
+
+				protected async routes() {
+					return [TestEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective).toBe(endpointAuth);
 		});
 
-		it('router auth used when endpoint auth undefined', () => {
+		it('router auth used when endpoint auth undefined', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override async handle() {
 					return {};
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			const mockRouter = {
-				authentication: routerAuth,
-				getEffectiveAuthentication: () => routerAuth,
-			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			endpoint.parentRoute = mockRouter as any;
+			class TestRouter extends BaseApiRouter {
+				override authentication = routerAuth;
+
+				protected async routes() {
+					return [TestEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective).toBe(routerAuth);
 		});
 
-		it('server auth when endpoint and router undefined', () => {
+		it('server auth when endpoint and router undefined', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override async handle() {
 					return {};
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			const routerWithServerAuth = {
-				authentication: undefined,
-				getEffectiveAuthentication: () => serverAuth,
-			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			endpoint.parentRoute = routerWithServerAuth as any;
+			class TestRouter extends BaseApiRouter {
+				override authentication = undefined;
+
+				protected async routes() {
+					return [TestEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			// Mock 'serverAuth' cascading from server container
+			router.container.register('auth', serverAuth);
+
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective).toBe(serverAuth);
 		});
 
-		it('returns undefined when no auth at any level', () => {
+		it('returns undefined when no auth at any level', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override async handle() {
 					return {};
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			endpoint.parentRoute = undefined;
+			class TestRouter extends BaseApiRouter {
+				protected async routes() {
+					return [TestEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective).toBeUndefined();
 		});
 
-		it('endpoint null explicitly makes it public', () => {
+		it('endpoint null explicitly makes it public', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override authentication = null;
 
@@ -98,38 +125,55 @@ describe('Authentication Cascading', () => {
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			endpoint.parentRoute = { authentication: routerAuth } as any;
+			class TestRouter extends BaseApiRouter {
+				override authentication = routerAuth;
+
+				protected async routes() {
+					return [TestEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective).toBeNull();
 		});
 
-		it('null (public) vs undefined (inherited)', () => {
-			class TestEndpoint extends BaseApiEndpoint {
+		it('null (public) vs undefined (inherited)', async () => {
+			class PublicEndpoint extends BaseApiEndpoint {
+				override authentication = null;
+
 				override async handle() {
 					return {};
 				}
 			}
 
-			const publicEndpoint = new TestEndpoint();
-			publicEndpoint.authentication = null;
-			const mockRouter1 = {
-				authentication: routerAuth,
-				getEffectiveAuthentication: () => routerAuth,
-			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			publicEndpoint.parentRoute = mockRouter1 as any;
+			class InheritedEndpoint extends BaseApiEndpoint {
+				override authentication = undefined;
 
-			const inheritedEndpoint = new TestEndpoint();
-			inheritedEndpoint.authentication = undefined;
-			const mockRouter2 = {
-				authentication: routerAuth,
-				getEffectiveAuthentication: () => routerAuth,
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			} as any;
-			inheritedEndpoint.parentRoute = mockRouter2;
+				override async handle() {
+					return {};
+				}
+			}
+
+			class TestRouter extends BaseApiRouter {
+				override authentication = routerAuth;
+
+				protected async routes() {
+					return [PublicEndpoint, InheritedEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const publicEndpoint = router.registeredRoutes.find(
+				(r) => r instanceof PublicEndpoint
+			) as PublicEndpoint;
+			const inheritedEndpoint = router.registeredRoutes.find(
+				(r) => r instanceof InheritedEndpoint
+			) as InheritedEndpoint;
 
 			expect(publicEndpoint.getEffectiveAuthentication()).toBeNull();
 			expect(inheritedEndpoint.getEffectiveAuthentication()).toBe(
@@ -139,7 +183,7 @@ describe('Authentication Cascading', () => {
 	});
 
 	describe('Router-level cascading', () => {
-		it('router auth cascades to endpoints without auth', () => {
+		it('router auth cascades to endpoints without auth', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override async handle() {
 					return {};
@@ -149,19 +193,20 @@ describe('Authentication Cascading', () => {
 			class TestRouter extends BaseApiRouter {
 				override authentication = routerAuth;
 
-				override async routes() {
+				protected async routes() {
 					return [TestEndpoint];
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			endpoint.parentRoute = new TestRouter();
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective).toBe(routerAuth);
 		});
 
-		it('endpoint auth overrides router auth', () => {
+		it('endpoint auth overrides router auth', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override authentication = endpointAuth;
 
@@ -173,19 +218,21 @@ describe('Authentication Cascading', () => {
 			class TestRouter extends BaseApiRouter {
 				override authentication = routerAuth;
 
-				override async routes() {
+				protected async routes() {
 					return [TestEndpoint];
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			endpoint.parentRoute = new TestRouter();
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective).toBe(endpointAuth);
 		});
 
-		it('endpoint null makes route public with router auth', () => {
+		it('endpoint null makes route public with router auth', async () => {
+			// TODO: Is this test duplicative of one above?
 			class TestEndpoint extends BaseApiEndpoint {
 				override authentication = null;
 
@@ -197,13 +244,14 @@ describe('Authentication Cascading', () => {
 			class TestRouter extends BaseApiRouter {
 				override authentication = routerAuth;
 
-				override async routes() {
+				protected async routes() {
 					return [TestEndpoint];
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			endpoint.parentRoute = new TestRouter();
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective).toBeNull();
@@ -211,7 +259,7 @@ describe('Authentication Cascading', () => {
 	});
 
 	describe('Mixed Authentication Schemes', () => {
-		it('different schemes at different levels', () => {
+		it('different schemes at different levels', async () => {
 			const scheme1 = new BearerAuthenticationScheme({
 				checkToken: async () => true,
 				schemeName: 'Scheme1',
@@ -238,8 +286,20 @@ describe('Authentication Cascading', () => {
 				}
 			}
 
-			const e1 = new Endpoint1();
-			const e2 = new Endpoint2();
+			class TestRouter extends BaseApiRouter {
+				protected async routes() {
+					return [Endpoint1, Endpoint2];
+				}
+			}
+
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const e1 = router.registeredRoutes.find(
+				(r) => r instanceof Endpoint1
+			) as Endpoint1;
+			const e2 = router.registeredRoutes.find(
+				(r) => r instanceof Endpoint2
+			) as Endpoint2;
 
 			expect(e1.getEffectiveAuthentication()).toBe(scheme1);
 			expect(e2.getEffectiveAuthentication()).toBe(scheme2);
@@ -247,38 +307,49 @@ describe('Authentication Cascading', () => {
 	});
 
 	describe('Authentication Scheme Names', () => {
-		it('preserved through cascading', () => {
+		it('preserved through cascading', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override async handle() {
 					return {};
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			endpoint.parentRoute = new (class extends BaseApiRouter {
+			class TestRouter extends BaseApiRouter {
 				override authentication = routerAuth;
 
-				override async routes() {
-					return [];
+				protected async routes() {
+					return [TestEndpoint];
 				}
-			})();
+			}
+
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective?.schemeName).toBe('RouterAuth');
 		});
 
-		it('endpoints override parent scheme names', () => {
+		it('endpoints override parent scheme names', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
+				override authentication = endpointAuth;
+
 				override async handle() {
 					return {};
 				}
 			}
 
-			const endpoint = new TestEndpoint();
-			endpoint.authentication = endpointAuth;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			endpoint.parentRoute = { authentication: routerAuth } as any;
+			class TestRouter extends BaseApiRouter {
+				override authentication = routerAuth;
+
+				protected async routes() {
+					return [TestEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			await router.register(ExpressRouter(), '');
+			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
 			const effective = endpoint.getEffectiveAuthentication();
 			expect(effective?.schemeName).toBe('EndpointAuth');

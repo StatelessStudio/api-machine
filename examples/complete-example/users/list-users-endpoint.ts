@@ -5,7 +5,7 @@ import {
 	TrimSanitizer,
 } from 'valsan';
 import { ApiRequest, ApiResponse, GetEndpoint } from '../../../src/index';
-import { usersRepo } from './users-repository';
+import { UsersRepository } from './users-repository';
 
 /**
  * Complete Example - List Users Endpoint
@@ -15,6 +15,8 @@ import { usersRepo } from './users-repository';
  */
 export class ListUsersEndpoint extends GetEndpoint {
 	override path = '/';
+
+	protected usersRepo: UsersRepository;
 
 	override params = new ObjectValSan({
 		schema: {
@@ -29,7 +31,11 @@ export class ListUsersEndpoint extends GetEndpoint {
 		},
 	});
 
+	override inject(): void {
+		this.usersRepo = this.container.require(UsersRepository);
+	}
+
 	async handle(request: ApiRequest, response: ApiResponse) {
-		return Object.values(usersRepo);
+		return this.usersRepo.getAll();
 	}
 }

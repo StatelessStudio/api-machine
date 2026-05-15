@@ -70,6 +70,8 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 		parentRouter: ExpressRouter,
 		parentPath: string
 	): Promise<void> {
+		await super.register(parentRouter, parentPath);
+
 		if (!this.name) {
 			this.name = this.constructor.name.replace(/Endpoint$/, '');
 		}

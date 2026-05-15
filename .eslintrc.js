@@ -41,7 +41,11 @@ module.exports = {
 		"@typescript-eslint/no-floating-promises": 2,
 		"@typescript-eslint/no-misused-new": 2,
 		"@typescript-eslint/no-namespace": 1,
-		"@typescript-eslint/no-unused-vars": 1,
+		"@typescript-eslint/no-unused-vars": [1, {
+			"argsIgnorePattern": "^_",
+			"varsIgnorePattern": "^_",
+			"caughtErrorsIgnorePattern": "^_"
+		}],
 		"@typescript-eslint/promise-function-async": 1,
 		"@typescript-eslint/no-var-requires": 2,
 	},

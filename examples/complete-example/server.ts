@@ -2,6 +2,8 @@ import { RestServer } from '../../src/index';
 import { MainRouter } from './router';
 import { Log } from 'ts-tiny-log';
 
+import { UsersRepository } from './users/users-repository';
+
 /**
  * Complete Example - Server
  *
@@ -11,6 +13,12 @@ import { Log } from 'ts-tiny-log';
  */
 export class MyServer extends RestServer {
 	override router = MainRouter;
+
+	override async inject(): Promise<void> {
+		await super.inject();
+
+		this.container.register(UsersRepository, new UsersRepository());
+	}
 
 	protected override async setupExpress(): Promise<void> {
 		await super.setupExpress();

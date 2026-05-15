@@ -1,5 +1,6 @@
 import { Router as ExpressRouter, RequestHandler } from 'express';
 import { AuthenticationScheme } from '../authentication/authentication-scheme';
+import { DependencyContainer } from 'hidi';
 
 export abstract class BaseApiRoute {
 	public path: string;
@@ -7,6 +8,11 @@ export abstract class BaseApiRoute {
 	public name: string;
 	public description?: string;
 	public routeType: 'router' | 'endpoint';
+
+	/**
+	 * Dependency container for this route
+	 */
+	public container: DependencyContainer = new DependencyContainer();
 
 	/**
 	 * Optional array of Express middleware to apply
@@ -27,10 +33,20 @@ export abstract class BaseApiRoute {
 	// eslint-disable-next-line no-use-before-define
 	public parentRoute?: BaseApiRoute;
 
-	public abstract register(
-		parentRouter: ExpressRouter,
-		parentPath: string
-	): Promise<void>;
+	public async register(
+		_parentRouter: ExpressRouter,
+		_parentPath: string
+	): Promise<void> {
+		if (this.authentication !== undefined) {
+			this.container.register('auth', this.authentication);
+		}
+
+		this.inject();
+	}
+
+	public inject(): void {
+		// Override in subclasses to register dependencies
+	}
 
 	public getName(): string {
 		return this.name || this.constructor.name;
@@ -60,18 +76,7 @@ export abstract class BaseApiRoute {
 		| AuthenticationScheme
 		| undefined
 		| null {
-		// If explicitly set (including null for public routes), use it
-		if (this.authentication !== undefined) {
-			return this.authentication;
-		}
-
-		// Otherwise, cascade to parent
-		if (this.parentRoute) {
-			return this.parentRoute.getEffectiveAuthentication();
-		}
-
-		// No authentication at any level
-		return undefined;
+		return this.container.get('auth');
 	}
 }
 

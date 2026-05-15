@@ -72,6 +72,39 @@ curl "http://localhost:3000/api/express/search?q=test&page=2&limit=20"
 curl http://localhost:3000/api/health
 ```
 
+### Dependency Injection
+
+API-Machine uses `hidi`. You can register dependencies at the server, router or endpoint level.
+
+```typescript
+class MyService {
+	...
+}
+
+class MyRouter extends BaseApiRouter {
+	override inject() {
+		super.inject();
+
+		// Register a dependency at the router level
+		this.container.register(MyService, new MyService());
+	}
+}
+
+class MyEndpoint extends BaseApiEndpoint {
+	protected myService: MyService;
+
+	override inject() {
+		super.inject();
+
+		this.myService = this.container.require(MyService);
+	}
+
+	async handle(request: ApiRequest, response: ApiResponse) {
+		this.myService.performAction();
+	}
+}
+```
+
 ### Bearer Token Authentication (Inline, Stateless)
 
 Bearer authentication validates a token on every request without maintaining session state.

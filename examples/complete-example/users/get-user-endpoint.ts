@@ -1,6 +1,6 @@
 import { ApiRequest, ApiResponse, GetEndpoint } from '../../../src/index';
 import { NotFoundError } from '../../../src/error';
-import { usersRepo } from './users-repository';
+import { UsersRepository } from './users-repository';
 import { IntegerValidator, EmailValidator, ObjectValSan } from 'valsan';
 import { NameValSan } from './name-valsan';
 
@@ -12,6 +12,8 @@ import { NameValSan } from './name-valsan';
  */
 export class GetUserEndpoint extends GetEndpoint {
 	override path = '/:id';
+
+	protected usersRepo: UsersRepository;
 
 	override responseExample = {
 		id: 1,
@@ -28,9 +30,13 @@ export class GetUserEndpoint extends GetEndpoint {
 		},
 	});
 
+	override inject(): void {
+		this.usersRepo = this.container.require(UsersRepository);
+	}
+
 	async handle(request: ApiRequest, response: ApiResponse) {
 		const userId = parseInt(request.params['id'], 10);
-		const user = usersRepo[userId];
+		const user = this.usersRepo.getById(userId);
 
 		if (!user) {
 			// Throw HTTPError - server will automatically format response

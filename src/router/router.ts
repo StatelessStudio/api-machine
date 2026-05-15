@@ -14,10 +14,12 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 		return this.name || this.constructor.name.replace(/Router$/, '');
 	}
 
-	public async register(
+	public override async register(
 		parent: ExpressRouter,
 		parentPath: string
 	): Promise<void> {
+		await super.register(parent, parentPath);
+
 		this.router = ExpressRouter();
 		this.registerRoutePath(parentPath);
 
@@ -43,7 +45,8 @@ export abstract class BaseApiRouter extends BaseApiRoute {
 		for (const route of routes) {
 			const instance = new route();
 
-			// Set parent relationship for authentication cascading
+			// Set parent for auth and dependency cascading
+			instance.container.setParent(this.container);
 			instance.parentRoute = this;
 
 			if (instance.routeType === 'endpoint') {

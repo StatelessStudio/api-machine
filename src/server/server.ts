@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
+import { DependencyContainer } from 'hidi';
 
 import { defaultRestServerOptions, RestServerOptions } from './server-options';
 import { ApiRouter, BaseApiRouter } from '../router';
@@ -17,6 +18,11 @@ export abstract class RestServer {
 
 	public router: ApiRouter;
 	public routerInstance: BaseApiRouter;
+
+	/**
+	 * Dependency container for the server
+	 */
+	public container: DependencyContainer = new DependencyContainer();
 
 	public readonly port: number;
 	public readonly maxPayloadSizeMB: number;
@@ -45,6 +51,7 @@ export abstract class RestServer {
 	}
 
 	public async start() {
+		await this.inject();
 		await this.setupExpress();
 		await this.createRouter();
 		await this.registerAuthentication();
@@ -61,8 +68,13 @@ export abstract class RestServer {
 		}
 	}
 
+	public async inject(): Promise<void> {
+		// Register dependencies
+	}
+
 	protected async createRouter(): Promise<void> {
 		this.routerInstance = new this.router();
+		this.routerInstance.container.setParent(this.container);
 	}
 
 	protected async registerAuthentication(): Promise<void> {
