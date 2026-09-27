@@ -137,6 +137,8 @@ throw new MethodNotAllowedError('Method not supported', {
 
 ### TooManyRequestsError (429)
 
+Use this when a client has exceeded a rate limit, has been temporarily locked out, or should retry after a cool-down period.
+
 ```typescript
 import { TooManyRequestsError } from 'api-machine';
 
@@ -149,15 +151,21 @@ throw new TooManyRequestsError('Rate limit exceeded', {
 });
 // Headers: { 'Retry-After': '60' }
 
-// With rate limit details
-throw new TooManyRequestsError('Too many requests', {
-	retryAfter: 120,
+// With auth lockout details
+throw new TooManyRequestsError('Authentication temporarily unavailable', {
+	retryAfter: 45,
 	details: {
-		limit: 100,
-		current: 150,
-		resetAt: '2024-01-01T12:00:00Z'
+		scope: 'credential',
+		retryAfterSeconds: 45,
 	}
 });
+```
+
+For IAM protection results, a common pattern is:
+
+```typescript
+const result = { allowed: false, retryAfterSeconds: 45 };
+throwIfAuthenticationBlocked(result);
 ```
 
 ### UnsupportedMediaTypeError (415)

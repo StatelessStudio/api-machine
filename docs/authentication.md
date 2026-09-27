@@ -192,6 +192,45 @@ class AdminEndpoint extends BaseApiEndpoint {
 - Basic authentication (username/password in header)
 - Any credential that can be validated synchronously on each request
 
+## Authentication Protection and Lockout
+
+Authentication engines may also expose a protection policy that decides whether a credential attempt is allowed before credentials are verified.
+
+This is especially useful for:
+- brute-force prevention
+- temporary lockout after repeated failures
+- server-side cooldown windows tied to a specific credential or subject
+
+The shared IAM contract defines:
+
+```typescript
+interface AuthenticationProtectionResult {
+  allowed: boolean;
+  retryAfterSeconds?: number;
+}
+```
+
+and the protection hooks:
+
+```typescript
+interface AuthenticationProtection {
+  beforeAttempt(attempt): Promise<AuthenticationProtectionResult>;
+  onFailure(attempt): Promise<void>;
+  onSuccess(attempt): Promise<void>;
+}
+```
+
+When a protection result denies access, the HTTP layer may translate that into a `429 Too Many Requests` response with a `Retry-After` header.
+
+```typescript
+import { throwIfAuthenticationBlocked } from 'api-machine';
+
+const result = { allowed: false, retryAfterSeconds: 45 };
+throwIfAuthenticationBlocked(result);
+// -> throws TooManyRequestsError('Authentication temporarily unavailable')
+// -> full response includes Retry-After: 45
+```
+
 ```typescript
 import { InlineAuthenticationScheme } from 'api-machine';
 import { ApiRequest } from 'api-machine';

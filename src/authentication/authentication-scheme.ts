@@ -10,6 +10,7 @@ import {
 	BaseApiRouter,
 } from '../router';
 import { SessionDriver } from '../session/session-driver';
+import { TooManyRequestsError } from '../error';
 import { AuthenticatedRequest } from './authenticated-request';
 import { AuthFlow } from './auth-flow';
 import { ApiRoute } from '../router/base';
@@ -57,6 +58,27 @@ export abstract class AuthenticationScheme {
 	 * @returns Express RequestHandler middleware
 	 */
 	public abstract getMiddleware(): RequestHandler;
+}
+
+export interface AuthenticationProtectionResult {
+	allowed: boolean;
+	retryAfterSeconds?: number;
+}
+
+export function throwIfAuthenticationBlocked(
+	result: AuthenticationProtectionResult
+): void {
+	if (result.allowed) {
+		return;
+	}
+
+	throw new TooManyRequestsError('Authentication temporarily unavailable', {
+		retryAfter:
+			typeof result.retryAfterSeconds === 'number' &&
+			result.retryAfterSeconds > 0
+				? result.retryAfterSeconds
+				: undefined,
+	});
 }
 
 export abstract class InlineAuthenticationScheme extends AuthenticationScheme {
