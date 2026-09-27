@@ -3,6 +3,7 @@ import {
 	AuthenticationScheme,
 	BearerAuthenticationScheme,
 	InlineAuthenticationScheme,
+	throwIfAuthenticationBlocked,
 } from '../../../src/authentication';
 import {
 	ApiNextFunction,
@@ -50,6 +51,32 @@ class TestInlineScheme extends InlineAuthenticationScheme {
 }
 
 describe('AuthenticationScheme (Base Class)', () => {
+	describe('Authentication protection adapter', () => {
+		it('should convert a blocked auth attempt into a 429 error', () => {
+			expect(() =>
+				throwIfAuthenticationBlocked({
+					allowed: false,
+					retryAfterSeconds: 45,
+				})
+			).toThrow();
+
+			try {
+				throwIfAuthenticationBlocked({
+					allowed: false,
+					retryAfterSeconds: 45,
+				});
+				fail('Expected a TooManyRequestsError');
+			}
+			catch (error) {
+				const err = error as Error;
+				expect(err.name).toBe('TooManyRequestsError');
+				expect(err.message).toBe(
+					'Authentication temporarily unavailable'
+				);
+			}
+		});
+	});
+
 	describe('Interface Contract', () => {
 		it('should have required abstract properties', () => {
 			class TestScheme extends AuthenticationScheme {
