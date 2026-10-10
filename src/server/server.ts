@@ -42,6 +42,7 @@ export abstract class RestServer {
 		this.maxPayloadSizeMB = options.maxPayloadSizeMB!;
 		this.maxUrlEncodedSizeMB = options.maxUrlEncodedSizeMB!;
 		this.log = options.log!;
+		this.container.register('log', this.log);
 		this.securityHeaders = {
 			...defaultRestServerOptions.securityHeaders,
 			...options.securityHeaders,
