@@ -143,6 +143,26 @@ describe('SessionAuthenticationScheme', () => {
 			expect(next).toHaveBeenCalled();
 		});
 
+		it('reads a principal from the validated session cookie', async () => {
+			const scheme = new TestSessionScheme();
+			const driver = new TestableSessionDriver();
+			const principal = { id: 'principal-123' };
+			driver.createSession({ id: 'session-123', principal });
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(scheme as any).sessionDriver = driver;
+
+			const request = {
+				headers: { cookie: 'other=value; sessionId=session-123' },
+			} as AnyRequest;
+			const next = jasmine.createSpy('next');
+
+			await scheme.getMiddleware()(request, {} as AnyResponse, next);
+
+			expect(request.authenticated).toBe(true);
+			expect(request.principal).toEqual(principal);
+			expect(next).toHaveBeenCalled();
+		});
+
 		it('should pass request to checkSession', async () => {
 			const scheme = new TestSessionScheme();
 			const driver = new TestableSessionDriver();

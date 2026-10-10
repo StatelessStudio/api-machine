@@ -11,7 +11,10 @@ import {
 } from '../router';
 import { SessionDriver } from '../session/session-driver';
 import { TooManyRequestsError } from '../error';
-import { AuthenticatedRequest } from './authenticated-request';
+import {
+	AuthenticatedPrincipal,
+	AuthenticatedRequest,
+} from './authenticated-request';
 import { AuthFlow } from './auth-flow';
 import { ApiRoute } from '../router/base';
 
@@ -86,7 +89,7 @@ export abstract class InlineAuthenticationScheme extends AuthenticationScheme {
 	public abstract authenticate(options: {
 		credentials: unknown;
 		request: ApiRequest;
-	}): Promise<void>;
+	}): Promise<void | AuthenticatedPrincipal>;
 
 	/**
 	 * Generate the Express middleware that enforces this authentication
@@ -101,9 +104,12 @@ export abstract class InlineAuthenticationScheme extends AuthenticationScheme {
 			next: ApiNextFunction
 		) => {
 			const credentials = this.getCredentials(request);
-			await this.authenticate({ credentials, request });
+			const principal = await this.authenticate({ credentials, request });
 
 			request.authenticated = true;
+			if (principal) {
+				request.principal = principal;
+			}
 
 			return next();
 		};
@@ -162,13 +168,44 @@ export abstract class SessionAuthenticationScheme extends AuthenticationScheme {
 			response: ApiResponse,
 			next: ApiNextFunction
 		) => {
+			const sessionId = this.getSessionId(request);
 			await this.sessionDriver.checkSession({
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				sessionId: (request as any).sessionId,
+				sessionId,
 			});
+			const session = await this.sessionDriver.getSession({ sessionId });
 
 			request.authenticated = true;
+			if (session.principal) {
+				request.principal = session.principal;
+			}
 			return next();
 		};
+	}
+
+	protected getSessionId(request: AuthenticatedRequest): string | undefined {
+		if (request.sessionId) {
+			return request.sessionId;
+		}
+
+		const cookieHeader = request.headers?.cookie;
+		if (!cookieHeader) {
+			return undefined;
+		}
+
+		const sessionCookie = cookieHeader
+			.split(';')
+			.map((cookie) => cookie.trim())
+			.find((cookie) => cookie.startsWith('sessionId='));
+
+		if (!sessionCookie) {
+			return undefined;
+		}
+
+		try {
+			return decodeURIComponent(sessionCookie.slice('sessionId='.length));
+		}
+		catch {
+			return undefined;
+		}
 	}
 }

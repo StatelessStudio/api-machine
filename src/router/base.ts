@@ -1,6 +1,15 @@
 import { Router as ExpressRouter, RequestHandler } from 'express';
 import { AuthenticationScheme } from '../authentication/authentication-scheme';
 import { DependencyContainer } from 'hidi';
+import {
+	ApiAuthorizationService,
+	AuthorizationRequirement,
+} from '../authorization';
+
+export const AUTHENTICATION_KEY = 'api-machine.authn';
+export const AUTHORIZATION_KEY = 'api-machine.authz';
+export const AUTHORIZATION_REQUIREMENT_KEY =
+	'api-machine.authorization-requirement';
 
 export abstract class BaseApiRoute {
 	public path: string;
@@ -25,6 +34,8 @@ export abstract class BaseApiRoute {
 	 * If undefined, inherits from parent router or server
 	 */
 	public authentication?: AuthenticationScheme | null;
+	public authorizer?: ApiAuthorizationService | null;
+	public authorization?: AuthorizationRequirement | null;
 
 	/**
 	 * Parent route in the hierarchy (used for authentication cascading)
@@ -38,7 +49,18 @@ export abstract class BaseApiRoute {
 		_parentPath: string
 	): Promise<void> {
 		if (this.authentication !== undefined) {
-			this.container.register('auth', this.authentication);
+			this.container.register(AUTHENTICATION_KEY, this.authentication);
+		}
+
+		if (this.authorizer !== undefined) {
+			this.container.register(AUTHORIZATION_KEY, this.authorizer);
+		}
+
+		if (this.authorization !== undefined) {
+			this.container.register(
+				AUTHORIZATION_REQUIREMENT_KEY,
+				this.authorization
+			);
 		}
 
 		this.inject();
@@ -76,7 +98,21 @@ export abstract class BaseApiRoute {
 		| AuthenticationScheme
 		| undefined
 		| null {
-		return this.container.get('auth');
+		return this.container.get(AUTHENTICATION_KEY);
+	}
+
+	public getEffectiveAuthorizationService():
+		| ApiAuthorizationService
+		| undefined
+		| null {
+		return this.container.get(AUTHORIZATION_KEY);
+	}
+
+	public getEffectiveAuthorizationRequirement():
+		| AuthorizationRequirement
+		| undefined
+		| null {
+		return this.container.get(AUTHORIZATION_REQUIREMENT_KEY);
 	}
 }
 

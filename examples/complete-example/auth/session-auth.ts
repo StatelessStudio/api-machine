@@ -157,6 +157,7 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
 				// Create session in the driver
 				sessionDriver.createSession({
 					id: sessionId,
+					principal: { id: storedCode.username },
 					username: storedCode.username,
 					createdAt: new Date(),
 					expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),

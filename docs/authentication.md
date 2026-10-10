@@ -67,6 +67,10 @@ Authentication follows a priority hierarchy:
 - **Server-level** authentication applies as the default fallback
 - Set `authentication = null` to make a route explicitly public
 
+Authorization requirements also inherit from the nearest router or endpoint. A
+public endpoint inside an authorization-protected router must explicitly set
+both `authentication = null` and `authorization = null`.
+
 ```typescript
 class PublicRouter extends BaseApiRouter {
   override path = '/public';
@@ -101,7 +105,8 @@ import { BearerAuthenticationScheme } from 'api-machine';
 const auth = new BearerAuthenticationScheme({
   checkToken: async (token: string) => {
     // Validate token (check database, JWT, etc.)
-    return token === 'valid-token';
+    if (token !== 'valid-token') return false;
+    return { id: 'user-123' };
   },
   schemeName: 'BearerAuth',      // Optional: OpenAPI scheme name
   bearerFormat: 'JWT',            // Optional: Token format
@@ -115,6 +120,7 @@ const auth = new BearerAuthenticationScheme({
 - Validates token using `checkToken()` 
 - Returns 401 Unauthorized if token missing or invalid
 - Sets `request.authenticated = true` on successful validation
+- If `checkToken()` returns a principal object, attaches it to `request.principal`
 
 **Architecture:**
 - Extends `InlineAuthenticationScheme` for stateless credential-based auth
@@ -135,6 +141,11 @@ const server = new RestServer({
 ```
 
 All endpoints will require authentication unless a router or endpoint overrides it with `authentication = null`.
+
+For deployments that must not start with an unintentionally anonymous endpoint,
+set `requireAuthentication: true`. Startup then fails if any endpoint has no
+effective scheme; an explicit `authentication = null` remains an intentional
+public exception. This option defaults to `false` for backward compatibility.
 
 ## Router-Level Authentication
 
@@ -170,6 +181,41 @@ class AdminEndpoint extends BaseApiEndpoint {
   }
 }
 ```
+
+## Authorization
+
+Configure an authorizer at the server and declare requirements on protected endpoints. The authorizer is inherited through the Hidi container tree; endpoint or router `authorizer` values override inherited providers. A route requirement is separate from the service and is evaluated only when declared.
+
+```typescript
+const server = new RestServer({
+  port: 4000,
+  authentication: new BearerAuthenticationScheme({
+    checkToken: async (token) =>
+      token === 'valid-token' ? { id: 'user-123' } : false,
+  }),
+  authorizer: {
+    async evaluate({ principal, action, resource }) {
+      return {
+        allowed:
+          principal.id === 'user-123' &&
+          action === 'read' &&
+          resource === 'reports',
+      };
+    },
+  },
+});
+
+class ReportsEndpoint extends BaseApiEndpoint {
+  override path = '/reports';
+  override authorization = { action: 'read', resource: 'reports' };
+
+  async handle(request) {
+    return { principal: request.principal };
+  }
+}
+```
+
+Unauthenticated requests receive `401`; authenticated requests denied by the policy receive `403`. Set `authentication = null` on a router or endpoint to explicitly make it public. A route with an authorization requirement still needs a trusted principal, even if authentication was opted out; otherwise it receives `401`.
 
 ## Inline Authentication Schemes
 

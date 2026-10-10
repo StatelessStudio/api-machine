@@ -1,4 +1,7 @@
-export { AuthenticatedRequest } from './authenticated-request';
+export {
+	AuthenticatedPrincipal,
+	AuthenticatedRequest,
+} from './authenticated-request';
 export {
 	AuthenticationScheme,
 	InlineAuthenticationScheme,

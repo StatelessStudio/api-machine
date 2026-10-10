@@ -1,6 +1,5 @@
 import {
 	Router as ExpressRouter,
-	Request as ExpressRequest,
 	Response as ExpressResponse,
 	NextFunction as ExpressNextFunction,
 } from 'express';
@@ -9,10 +8,17 @@ import { ObjectSanitizer } from 'valsan/object-sanitizer';
 
 import { BaseApiRoute } from './base';
 import { validateRequest } from './validation-middleware';
-import { BadRequestError, HTTPError, UnprocessableEntityError } from '../error';
+import {
+	BadRequestError,
+	ForbiddenError,
+	HTTPError,
+	UnauthorizedError,
+	UnprocessableEntityError,
+} from '../error';
 import { ArrayValSan, ObjectValSan } from 'valsan';
+import { AuthenticatedRequest } from '../authentication/authenticated-request';
 
-export type ApiRequest = ExpressRequest;
+export type ApiRequest = AuthenticatedRequest;
 export type ApiResponse = ExpressResponse;
 export type ApiNextFunction = ExpressNextFunction;
 
@@ -86,6 +92,43 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 		const effectiveAuth = this.getEffectiveAuthentication();
 		if (effectiveAuth) {
 			endpointMiddleware.push(effectiveAuth.getMiddleware());
+		}
+
+		const authorization = this.getEffectiveAuthorizationRequirement();
+		if (authorization) {
+			const authorizer = this.getEffectiveAuthorizationService();
+			if (!authorizer) {
+				throw new Error(
+					'Authorization is configured but no authorizer is available'
+				);
+			}
+
+			endpointMiddleware.push(
+				async (
+					request: ApiRequest,
+					_response: ApiResponse,
+					next: ApiNextFunction
+				) => {
+					const principal = (request as AuthenticatedRequest)
+						.principal;
+					if (!principal) {
+						throw new UnauthorizedError(
+							'An authenticated principal is required'
+						);
+					}
+
+					const result = await authorizer.evaluate({
+						principal,
+						...authorization,
+					});
+
+					if (!result.allowed) {
+						throw new ForbiddenError();
+					}
+
+					return next();
+				}
+			);
 		}
 
 		// Register with middleware (if any) before the handler

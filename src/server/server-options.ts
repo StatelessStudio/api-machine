@@ -1,5 +1,6 @@
 import { LogInterface } from '../log';
 import { AuthenticationScheme } from '../authentication/authentication-scheme';
+import { ApiAuthorizationService } from '../authorization';
 
 export interface SecurityHeadersOptions {
 	/**
@@ -48,6 +49,12 @@ export interface RestServerOptions {
 	 * This will be applied to all routers and endpoints unless overridden
 	 */
 	authentication?: AuthenticationScheme;
+	authorizer?: ApiAuthorizationService;
+	/**
+	 * Fail startup if any endpoint has no effective authentication scheme.
+	 * Explicitly public endpoints (`authentication = null`) are allowed.
+	 */
+	requireAuthentication?: boolean;
 }
 
 export const defaultSecurityHeadersOptions: SecurityHeadersOptions = {

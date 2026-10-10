@@ -5,6 +5,7 @@ import { DependencyContainer } from 'hidi';
 
 import { defaultRestServerOptions, RestServerOptions } from './server-options';
 import { ApiRouter, BaseApiRouter } from '../router';
+import { AUTHORIZATION_KEY, BaseApiRoute } from '../router/base';
 import { HTTPError, NotFoundError, ErrorResponse } from '../error';
 import { AuthenticationScheme } from '../authentication/authentication-scheme';
 
@@ -30,6 +31,8 @@ export abstract class RestServer {
 	public readonly securityHeaders: RestServerOptions['securityHeaders'];
 	public swaggerEnabled = false;
 	public authentication?: AuthenticationScheme;
+	public authorizer?: RestServerOptions['authorizer'];
+	public requireAuthentication: boolean;
 
 	protected app: express.Express;
 	protected listener: http.Server;
@@ -48,10 +51,15 @@ export abstract class RestServer {
 		};
 		this.swaggerEnabled = options.swaggerEnabled ?? false;
 		this.authentication = options.authentication;
+		this.authorizer = options.authorizer;
+		this.requireAuthentication = options.requireAuthentication ?? false;
 	}
 
 	public async start() {
 		await this.inject();
+		if (this.authorizer !== undefined) {
+			this.container.register(AUTHORIZATION_KEY, this.authorizer);
+		}
 		await this.setupExpress();
 		await this.createRouter();
 		await this.registerAuthentication();
@@ -89,6 +97,26 @@ export abstract class RestServer {
 
 	protected async registerRoutes(): Promise<void> {
 		await this.routerInstance.register(this.app, '');
+		if (this.requireAuthentication) {
+			this.validateAuthenticationCoverage(this.routerInstance);
+		}
+	}
+
+	protected validateAuthenticationCoverage(route: BaseApiRoute): void {
+		if (
+			route.routeType === 'endpoint' &&
+			route.getEffectiveAuthentication() === undefined
+		) {
+			throw new Error(
+				`Authentication is required but missing for ${route.fullPath}`
+			);
+		}
+
+		if (route instanceof BaseApiRouter) {
+			for (const child of route.registeredRoutes) {
+				this.validateAuthenticationCoverage(child);
+			}
+		}
 	}
 
 	protected async registerSwagger(): Promise<void> {

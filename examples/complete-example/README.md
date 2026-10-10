@@ -113,6 +113,7 @@ Bearer authentication validates a token on every request without maintaining ses
 # Test protected endpoint with valid token
 curl -H "Authorization: Bearer demo-token" \
   http://localhost:3000/api/bearer/protected
+# The endpoint returns the authenticated principal after its read policy passes.
 
 # Test without token (should return 401)
 curl http://localhost:3000/api/bearer/protected
@@ -120,6 +121,11 @@ curl http://localhost:3000/api/bearer/protected
 # Public endpoint in bearer router (no auth required)
 curl http://localhost:3000/api/bearer/public
 ```
+
+The server example enables `requireAuthentication`. Every endpoint must inherit
+or set an authentication scheme; public endpoints must explicitly set
+`authentication = null`. Routes covered by a router authorization requirement
+must also set `authorization = null` to opt out of authorization.
 
 ### OAuth2 Session-Based Authentication (Stateful)
 
