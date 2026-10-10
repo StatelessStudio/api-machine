@@ -184,35 +184,73 @@ class AdminEndpoint extends BaseApiEndpoint {
 
 ## Authorization
 
+### Dependency registration migration (1.5)
+
+New direct Hidi registrations should use `AUTHENTICATION_KEY` (`api-machine.authn`)
+instead of the former shared `'auth'` key. Authorization services use
+`AUTHORIZATION_KEY` (`api-machine.authz`). The old key is intentionally not
+resolved for authorization. For existing applications, an instance of
+`AuthenticationScheme` registered under `'auth'` remains a supported authentication
+fallback when no new-key setting exists. Non-authentication values under `'auth'`
+are never treated as schemes, and explicit new-key overrides (including `null`)
+take precedence. Server `authentication` and route properties remain the
+preferred configuration and do not require this migration.
+
+Bearer validators returning `true` still authenticate requests, but cannot
+satisfy principal-based authorization unless they also establish a trusted
+principal. Return a principal object when using protected routes. Avoid secrets in policy  metadata or errors, and apply appropriate log access controls and retention.
+
 Configure an authorizer at the server and declare requirements on protected endpoints. The authorizer is inherited through the Hidi container tree; endpoint or router `authorizer` values override inherited providers. A route requirement is separate from the service and is evaluated only when declared.
 
 ```typescript
-const server = new RestServer({
-  port: 4000,
-  authentication: new BearerAuthenticationScheme({
-    checkToken: async (token) =>
-      token === 'valid-token' ? { id: 'user-123' } : false,
-  }),
-  authorizer: {
-    async evaluate({ principal, action, resource }) {
-      return {
-        allowed:
-          principal.id === 'user-123' &&
-          action === 'read' &&
-          resource === 'reports',
-      };
-    },
-  },
-});
+import {
+  ApiRequest,
+  BaseApiEndpoint,
+  BaseApiRouter,
+  BearerAuthenticationScheme,
+  RestServer,
+} from 'api-machine';
 
 class ReportsEndpoint extends BaseApiEndpoint {
   override path = '/reports';
   override authorization = { action: 'read', resource: 'reports' };
 
-  async handle(request) {
+  async handle(request: ApiRequest) {
     return { principal: request.principal };
   }
 }
+
+class ReportsRouter extends BaseApiRouter {
+  async routes() {
+    return [ReportsEndpoint];
+  }
+}
+
+class ReportsServer extends RestServer {
+  override router = ReportsRouter;
+
+  constructor() {
+    super({
+      port: 4000,
+      authentication: new BearerAuthenticationScheme({
+        checkToken: async (token) =>
+          token === 'valid-token' ? { id: 'user-123' } : false,
+      }),
+      authorizer: {
+        async evaluate({ principal, action, resource }) {
+          return {
+            allowed:
+              principal.id === 'user-123' &&
+              action === 'read' &&
+              resource === 'reports',
+          };
+        },
+      },
+    });
+  }
+}
+
+const server = new ReportsServer();
 ```
 
 Unauthenticated requests receive `401`; authenticated requests denied by the policy receive `403`. Set `authentication = null` on a router or endpoint to explicitly make it public. A route with an authorization requirement still needs a trusted principal, even if authentication was opted out; otherwise it receives `401`.

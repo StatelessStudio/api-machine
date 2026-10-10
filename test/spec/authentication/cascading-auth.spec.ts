@@ -44,6 +44,28 @@ describe('Authentication Cascading', () => {
 	};
 
 	describe('getEffectiveAuthentication()', () => {
+		it('supports legacy auth registrations without authorization', () => {
+			const endpoint = new (class extends BaseApiEndpoint {
+				async handle() {
+					return {};
+				}
+			})();
+			endpoint.container.registerInstance('auth', serverAuth);
+			expect(endpoint.getEffectiveAuthentication()).toBe(serverAuth);
+			endpoint.container.registerInstance(AUTHENTICATION_KEY, null);
+			expect(endpoint.getEffectiveAuthentication()).toBeNull();
+		});
+
+		it('does not mistake a legacy authorization service for auth', () => {
+			const endpoint = new (class extends BaseApiEndpoint {
+				async handle() {
+					return {};
+				}
+			})();
+			endpoint.container.registerInstance('auth', serverAuthorizer);
+			expect(endpoint.getEffectiveAuthentication()).toBeUndefined();
+		});
+
 		it('endpoint auth overrides router and server', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override authentication = endpointAuth;
@@ -277,55 +299,56 @@ describe('Authentication Cascading', () => {
 			resource: 'documents',
 		};
 
-		it(
-			'inherits router requirements and allows endpoint overrides',
-			async () => {
-				class InheritedEndpoint extends BaseApiEndpoint {
-					async handle() {
-						return {};
-					}
+		it('inherits router requirements with endpoint overrides', async () => {
+			class InheritedEndpoint extends BaseApiEndpoint {
+				async handle() {
+					return {};
 				}
-
-				class OverrideEndpoint extends BaseApiEndpoint {
-					override authorization = endpointRequirement;
-
-					async handle() {
-						return {};
-					}
-				}
-
-				class PublicEndpoint extends BaseApiEndpoint {
-					override authorization = null;
-
-					async handle() {
-						return {};
-					}
-				}
-
-				class TestRouter extends BaseApiRouter {
-					override authorization = routerRequirement;
-
-					protected async routes() {
-						return [InheritedEndpoint, OverrideEndpoint, PublicEndpoint];
-					}
-				}
-
-				const router = new TestRouter();
-				router.container.register(AUTHORIZATION_KEY, serverAuthorizer);
-				await router.register(ExpressRouter(), '');
-
-				const requirements = router.registeredRoutes.map((route) =>
-					route.getEffectiveAuthorizationRequirement()
-				);
-				expect(requirements).toEqual([
-					routerRequirement,
-					endpointRequirement,
-					null,
-				]);
 			}
-		);
 
-		it('inherits a server requirement when the router has no override', async () => {
+			class OverrideEndpoint extends BaseApiEndpoint {
+				override authorization = endpointRequirement;
+
+				async handle() {
+					return {};
+				}
+			}
+
+			class PublicEndpoint extends BaseApiEndpoint {
+				override authorization = null;
+
+				async handle() {
+					return {};
+				}
+			}
+
+			class TestRouter extends BaseApiRouter {
+				override authorization = routerRequirement;
+
+				protected async routes() {
+					return [
+						InheritedEndpoint,
+						OverrideEndpoint,
+						PublicEndpoint,
+					];
+				}
+			}
+
+			const router = new TestRouter();
+			router.container.register(AUTHORIZATION_KEY, serverAuthorizer);
+			await router.register(ExpressRouter(), '');
+
+			const requirements = router.registeredRoutes.map((route) =>
+				route.getEffectiveAuthorizationRequirement()
+			);
+			expect(requirements).toEqual([
+				routerRequirement,
+				endpointRequirement,
+				null,
+			]);
+		});
+
+		it('inherits server requirements without router override', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				async handle() {
 					return {};
@@ -347,7 +370,8 @@ describe('Authentication Cascading', () => {
 			await router.register(ExpressRouter(), '');
 
 			const requirement =
-				router.registeredRoutes[0].getEffectiveAuthorizationRequirement();
+				router.registeredRoutes[0]
+					.getEffectiveAuthorizationRequirement();
 			expect(requirement).toEqual(routerRequirement);
 		});
 	});
