@@ -103,6 +103,7 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 				);
 			}
 
+			// eslint-disable-next-line no-console
 			endpointMiddleware.push(
 				async (
 					request: ApiRequest,
@@ -112,6 +113,9 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 					const principal = (request as AuthenticatedRequest)
 						.principal;
 					if (!principal) {
+						console.warn(
+							'[AuthZ] Authorization required but no principal found'
+						);
 						throw new UnauthorizedError(
 							'An authenticated principal is required'
 						);
@@ -123,7 +127,16 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 					});
 
 					if (!result.allowed) {
-						throw new ForbiddenError();
+						const msg =
+							`[AuthZ] Authorization denied for principal ${principal.id}`;
+						console.warn(msg, {
+							action: authorization.action,
+							resource: authorization.resource,
+							reason: result.reason,
+						});
+						throw new ForbiddenError(
+							result.reason || 'Authorization denied'
+						);
 					}
 
 					return next();
