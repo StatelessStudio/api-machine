@@ -37,6 +37,44 @@ describe('Dependency injection', () => {
 		await server.stop();
 	});
 
+	it('should share logger with routes', async () => {
+		const log = {
+			fatal: () => {},
+			error: () => {},
+			warn: () => {},
+			info: () => {},
+			debug: () => {},
+		};
+
+		class TestEndpoint extends BaseApiEndpoint {
+			override async handle() {
+				return {};
+			}
+		}
+
+		class TestRouter extends BaseApiRouter {
+			override async routes(): Promise<ApiRoute[]> {
+				return [TestEndpoint];
+			}
+		}
+
+		class TestServer extends RestServer {
+			override router = TestRouter;
+		}
+
+		const server = new TestServer({ port: 0, log });
+		await server.start();
+
+		const router = server.routerInstance;
+		const endpoint = router.registeredRoutes[0];
+
+		expect(server.container.get('log')).toBe(log);
+		expect(router.container.get('log')).toBe(log);
+		expect(endpoint.container.get('log')).toBe(log);
+
+		await server.stop();
+	});
+
 	it('should allow overriding dependencies at any layer', async () => {
 		class TestEndpoint extends BaseApiEndpoint {
 			override name = 'TestEndpoint';
