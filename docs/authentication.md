@@ -19,7 +19,8 @@ class SecureEndpoint extends BaseApiEndpoint {
 class ApiRouter extends BaseApiRouter {
   override path = '/api';
   override authentication = new BearerAuthenticationScheme({
-    checkToken: async (token: string) => token === 'secret-token',
+    checkToken: async (token: string) =>
+      token === 'secret-token' ? { id: 'router-user' } : false,
     schemeName: 'BearerAuth',
   });
   
@@ -31,7 +32,8 @@ class ApiRouter extends BaseApiRouter {
 const server = new RestServer({
   port: 4000,
   authentication: new BearerAuthenticationScheme({
-    checkToken: async (token: string) => token === 'server-token',
+    checkToken: async (token: string) =>
+      token === 'server-token' ? { id: 'server-user' } : false,
   }),
 });
 ```
@@ -84,7 +86,8 @@ class PublicRouter extends BaseApiRouter {
 class AdminEndpoint extends BaseApiEndpoint {
   override path = '/admin';
   override authentication = new BearerAuthenticationScheme({
-    checkToken: async (token) => token === 'admin-token',
+    checkToken: async (token) =>
+      token === 'admin-token' ? { id: 'admin-user' } : false,
   });
   
   async handle() {
@@ -135,7 +138,8 @@ Apply authentication to all endpoints by default:
 const server = new RestServer({
   port: 4000,
   authentication: new BearerAuthenticationScheme({
-    checkToken: async (token) => await validateToken(token),
+    checkToken: async (token) =>
+      token === 'valid-token' ? await findPrincipalForToken(token) : false,
   }),
 });
 ```
@@ -155,7 +159,8 @@ Apply authentication to all endpoints in a router:
 class SecureRouter extends BaseApiRouter {
   override path = '/secure';
   override authentication = new BearerAuthenticationScheme({
-    checkToken: async (token) => token === 'router-token',
+    checkToken: async (token) =>
+      token === 'router-token' ? { id: 'router-user' } : false,
   });
   
   async routes() {
@@ -172,7 +177,8 @@ Override parent authentication for specific endpoints:
 class AdminEndpoint extends BaseApiEndpoint {
   override path = '/admin';
   override authentication = new BearerAuthenticationScheme({
-    checkToken: async (token) => token === 'admin-token',
+    checkToken: async (token) =>
+      token === 'admin-token' ? { id: 'admin-user' } : false,
     schemeName: 'AdminAuth',
   });
   
@@ -183,22 +189,6 @@ class AdminEndpoint extends BaseApiEndpoint {
 ```
 
 ## Authorization
-
-### Dependency registration migration (1.5)
-
-New direct Hidi registrations should use `AUTHENTICATION_KEY` (`api-machine.authn`)
-instead of the former shared `'auth'` key. Authorization services use
-`AUTHORIZATION_KEY` (`api-machine.authz`). The old key is intentionally not
-resolved for authorization. For existing applications, an instance of
-`AuthenticationScheme` registered under `'auth'` remains a supported authentication
-fallback when no new-key setting exists. Non-authentication values under `'auth'`
-are never treated as schemes, and explicit new-key overrides (including `null`)
-take precedence. Server `authentication` and route properties remain the
-preferred configuration and do not require this migration.
-
-Bearer validators returning `true` still authenticate requests, but cannot
-satisfy principal-based authorization unless they also establish a trusted
-principal. Return a principal object when using protected routes. Avoid secrets in policy  metadata or errors, and apply appropriate log access controls and retention.
 
 Configure an authorizer at the server and declare requirements on protected endpoints. The authorizer is inherited through the Hidi container tree; endpoint or router `authorizer` values override inherited providers. A route requirement is separate from the service and is evaluated only when declared.
 
@@ -570,7 +560,8 @@ Authentication schemes automatically generate OpenAPI security definitions:
 
 ```typescript
 const bearerAuth = new BearerAuthenticationScheme({
-  checkToken: async (token) => await validate(token),
+  checkToken: async (token) =>
+    token === 'valid-token' ? await findPrincipalForToken(token) : false,
   schemeName: 'BearerAuth',
   description: 'JWT Bearer Authentication',
 });
