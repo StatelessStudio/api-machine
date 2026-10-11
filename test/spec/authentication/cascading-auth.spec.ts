@@ -6,7 +6,7 @@ import {
 	AUTHENTICATION_KEY,
 	AUTHORIZATION_KEY,
 	AUTHORIZATION_REQUIREMENT_KEY,
-} from '../../../src/router/base';
+} from '../../../src/router';
 import { BearerAuthenticationScheme } from '../../../src/authentication';
 
 describe('Authentication Cascading', () => {

@@ -1,4 +1,5 @@
 import 'jasmine';
+import { Router as ExpressRouter } from 'express';
 import {
 	ApiRequest,
 	BaseApiEndpoint,
@@ -110,6 +111,22 @@ describe('Authorization enforcement', () => {
 		expect(response.status).toBe(401);
 		expect(evaluate).not.toHaveBeenCalled();
 		expect(handled).toBe(0);
+	});
+
+	it('rejects authorization requirements without an authorizer', async () => {
+		class MisconfiguredEndpoint extends BaseApiEndpoint {
+			override authorization = { action: 'read', resource: 'users' };
+
+			async handle() {
+				return {};
+			}
+		}
+
+		await expectAsync(
+			new MisconfiguredEndpoint().register(ExpressRouter(), '')
+		).toBeRejectedWithError(
+			'Authorization is configured but no authorizer is available'
+		);
 	});
 
 	it('rejects auth without a principal before the handler runs', async () => {
