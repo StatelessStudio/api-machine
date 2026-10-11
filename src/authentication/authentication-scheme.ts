@@ -178,6 +178,7 @@ export abstract class SessionAuthenticationScheme extends AuthenticationScheme {
 			if (session.principal) {
 				request.principal = session.principal;
 			}
+
 			return next();
 		};
 	}
