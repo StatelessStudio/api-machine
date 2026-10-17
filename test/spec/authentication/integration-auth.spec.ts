@@ -1,7 +1,10 @@
 import 'jasmine';
 import { RestServer } from '../../../src/server';
 import { BaseApiRouter } from '../../../src/router/router';
-import { BaseApiEndpoint } from '../../../src/router/endpoint';
+import {
+	ApiRequest,
+	BaseApiEndpoint,
+} from '../../../src/router/endpoint';
 import { BearerAuthenticationScheme } from '../../../src/authentication';
 import { ErrorResponse } from '../../../src/error';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,6 +36,7 @@ describe('Authentication Integration Tests', () => {
 			constructor() {
 				super({
 					port: 0,
+					requireAuthentication: true,
 					authentication: new BearerAuthenticationScheme({
 						checkToken: async (token: string) =>
 							token === 'server-token',
@@ -93,6 +97,35 @@ describe('Authentication Integration Tests', () => {
 			finally {
 				await server.stop();
 			}
+		});
+
+		it('can require authentication coverage at startup', async () => {
+			class OpenEndpoint extends BaseApiEndpoint {
+				override path = '/open';
+
+				async handle() {
+					return {};
+				}
+			}
+
+			class OpenRouter extends BaseApiRouter {
+				async routes() {
+					return [OpenEndpoint];
+				}
+			}
+
+			class MisconfiguredServer extends RestServer {
+				override router = OpenRouter;
+
+				constructor() {
+					super({ port: 0, requireAuthentication: true });
+				}
+			}
+
+			const server = new MisconfiguredServer();
+			await expectAsync(server.start()).toBeRejectedWithError(
+				/Authentication is required but missing for \/open/
+			);
 		});
 	});
 
@@ -261,7 +294,7 @@ describe('Authentication Integration Tests', () => {
 			override version = '1.0.0';
 
 			constructor() {
-				super({ port: 0 });
+				super({ port: 0, requireAuthentication: true });
 			}
 		}
 
@@ -447,5 +480,109 @@ describe('Authentication Integration Tests', () => {
 				await server.stop();
 			}
 		});
+	});
+
+	describe('Authorization Middleware Integration', () => {
+		const authorizationCalls: string[] = [];
+		const authorizer = {
+			async evaluate(context: {
+				principal: { id: string };
+			}) {
+				authorizationCalls.push(context.principal.id);
+				return { allowed: context.principal.id === 'allowed' };
+			},
+		};
+
+		class ProtectedEndpoint extends BaseApiEndpoint {
+			override path = '/protected';
+
+			async handle(request: ApiRequest) {
+				return { principalId: request.principal?.id };
+			}
+		}
+
+		class PublicEndpoint extends BaseApiEndpoint {
+			override path = '/public';
+			override authentication = null;
+			override authorization = null;
+
+			async handle() {
+				return { public: true };
+			}
+		}
+
+		class ApiRouter extends BaseApiRouter {
+			override path = '/api';
+			override authorization = {
+				action: 'read',
+				resource: 'documents',
+			};
+
+			async routes() {
+				return [ProtectedEndpoint, PublicEndpoint];
+			}
+		}
+
+		class AuthorizationServer extends RestServer {
+			override router = ApiRouter;
+
+			constructor() {
+				super({
+					port: 0,
+					authorizer,
+					authentication: new BearerAuthenticationScheme({
+						checkToken: async (token: string) => {
+							const isAllowed = token === 'allowed-token';
+							return { id: isAllowed ? 'allowed' : 'denied' };
+						},
+					}),
+				});
+			}
+		}
+
+		it(
+			'authenticates before authorization and allows public routes',
+			async () => {
+				authorizationCalls.length = 0;
+				const server = new AuthorizationServer();
+				await server.start();
+
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const listener = (server as AnyServer).listener as any;
+				const port = listener.address().port;
+				const baseUrl = `http://localhost:${port}/api`;
+
+				try {
+					const unauthenticated = await fetch(
+						`${baseUrl}/protected`
+					);
+					expect(unauthenticated.status).toBe(401);
+					expect(authorizationCalls).toEqual([]);
+
+					const denied = await fetch(`${baseUrl}/protected`, {
+						headers: { Authorization: 'Bearer denied-token' },
+					});
+					expect(denied.status).toBe(403);
+					expect(authorizationCalls).toEqual(['denied']);
+
+					const allowed = await fetch(`${baseUrl}/protected`, {
+						headers: { Authorization: 'Bearer allowed-token' },
+					});
+					expect(allowed.status).toBe(200);
+					expect(await allowed.json()).toEqual({
+						principalId: 'allowed',
+					});
+
+					const publicResponse = await fetch(`${baseUrl}/public`);
+					expect(publicResponse.status).toBe(200);
+					expect(await publicResponse.json()).toEqual({
+						public: true,
+					});
+				}
+				finally {
+					await server.stop();
+				}
+			}
+		);
 	});
 });

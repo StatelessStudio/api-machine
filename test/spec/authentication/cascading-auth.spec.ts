@@ -2,6 +2,11 @@ import 'jasmine';
 import { Router as ExpressRouter } from 'express';
 import { BaseApiEndpoint } from '../../../src/router/endpoint';
 import { BaseApiRouter } from '../../../src/router/router';
+import {
+	AUTHENTICATION_KEY,
+	AUTHORIZATION_KEY,
+	AUTHORIZATION_REQUIREMENT_KEY,
+} from '../../../src/router';
 import { BearerAuthenticationScheme } from '../../../src/authentication';
 
 describe('Authentication Cascading', () => {
@@ -20,7 +25,47 @@ describe('Authentication Cascading', () => {
 		schemeName: 'EndpointAuth',
 	});
 
+	const serverAuthorizer = {
+		async evaluate() {
+			return { allowed: true };
+		},
+	};
+
+	const routerAuthorizer = {
+		async evaluate() {
+			return { allowed: true };
+		},
+	};
+
+	const endpointAuthorizer = {
+		async evaluate() {
+			return { allowed: true };
+		},
+	};
+
 	describe('getEffectiveAuthentication()', () => {
+		it('supports legacy auth registrations without authorization', () => {
+			const endpoint = new (class extends BaseApiEndpoint {
+				async handle() {
+					return {};
+				}
+			})();
+			endpoint.container.registerInstance('auth', serverAuth);
+			expect(endpoint.getEffectiveAuthentication()).toBe(serverAuth);
+			endpoint.container.registerInstance(AUTHENTICATION_KEY, null);
+			expect(endpoint.getEffectiveAuthentication()).toBeNull();
+		});
+
+		it('does not mistake a legacy authorization service for auth', () => {
+			const endpoint = new (class extends BaseApiEndpoint {
+				async handle() {
+					return {};
+				}
+			})();
+			endpoint.container.registerInstance('auth', serverAuthorizer);
+			expect(endpoint.getEffectiveAuthentication()).toBeUndefined();
+		});
+
 		it('endpoint auth overrides router and server', async () => {
 			class TestEndpoint extends BaseApiEndpoint {
 				override authentication = endpointAuth;
@@ -39,6 +84,7 @@ describe('Authentication Cascading', () => {
 			}
 
 			const router = new TestRouter();
+			router.container.register(AUTHORIZATION_KEY, serverAuthorizer);
 			await router.register(ExpressRouter(), '');
 			const endpoint = router.registeredRoutes[0] as TestEndpoint;
 
@@ -86,7 +132,7 @@ describe('Authentication Cascading', () => {
 
 			const router = new TestRouter();
 			// Mock 'serverAuth' cascading from server container
-			router.container.register('auth', serverAuth);
+			router.container.register(AUTHENTICATION_KEY, serverAuth);
 
 			await router.register(ExpressRouter(), '');
 			const endpoint = router.registeredRoutes[0] as TestEndpoint;
@@ -179,6 +225,154 @@ describe('Authentication Cascading', () => {
 			expect(inheritedEndpoint.getEffectiveAuthentication()).toBe(
 				routerAuth
 			);
+		});
+	});
+
+	describe('getEffectiveAuthorizationService()', () => {
+		it('uses the nearest router or endpoint authorizer', async () => {
+			class InheritedEndpoint extends BaseApiEndpoint {
+				async handle() {
+					return {};
+				}
+			}
+
+			class OverrideEndpoint extends BaseApiEndpoint {
+				override authorizer = endpointAuthorizer;
+
+				async handle() {
+					return {};
+				}
+			}
+
+			class TestRouter extends BaseApiRouter {
+				override authorizer = routerAuthorizer;
+
+				protected async routes() {
+					return [InheritedEndpoint, OverrideEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			router.container.register(AUTHORIZATION_KEY, serverAuthorizer);
+			await router.register(ExpressRouter(), '');
+
+			const inherited = router.registeredRoutes[0];
+			const overridden = router.registeredRoutes[1];
+			expect(inherited.getEffectiveAuthorizationService()).toBe(
+				routerAuthorizer
+			);
+			expect(overridden.getEffectiveAuthorizationService()).toBe(
+				endpointAuthorizer
+			);
+		});
+
+		it('uses the server authorizer when the router inherits', async () => {
+			class TestEndpoint extends BaseApiEndpoint {
+				async handle() {
+					return {};
+				}
+			}
+
+			class TestRouter extends BaseApiRouter {
+				protected async routes() {
+					return [TestEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			router.container.register(AUTHORIZATION_KEY, serverAuthorizer);
+			await router.register(ExpressRouter(), '');
+
+			expect(
+				router.registeredRoutes[0].getEffectiveAuthorizationService()
+			).toBe(serverAuthorizer);
+		});
+	});
+
+	describe('getEffectiveAuthorizationRequirement()', () => {
+		const routerRequirement = {
+			action: 'manage',
+			resource: 'rbac',
+		};
+		const endpointRequirement = {
+			action: 'read',
+			resource: 'documents',
+		};
+
+		it('inherits router requirements with endpoint overrides', async () => {
+			class InheritedEndpoint extends BaseApiEndpoint {
+				async handle() {
+					return {};
+				}
+			}
+
+			class OverrideEndpoint extends BaseApiEndpoint {
+				override authorization = endpointRequirement;
+
+				async handle() {
+					return {};
+				}
+			}
+
+			class PublicEndpoint extends BaseApiEndpoint {
+				override authorization = null;
+
+				async handle() {
+					return {};
+				}
+			}
+
+			class TestRouter extends BaseApiRouter {
+				override authorization = routerRequirement;
+
+				protected async routes() {
+					return [
+						InheritedEndpoint,
+						OverrideEndpoint,
+						PublicEndpoint,
+					];
+				}
+			}
+
+			const router = new TestRouter();
+			router.container.register(AUTHORIZATION_KEY, serverAuthorizer);
+			await router.register(ExpressRouter(), '');
+
+			const requirements = router.registeredRoutes.map((route) =>
+				route.getEffectiveAuthorizationRequirement()
+			);
+			expect(requirements).toEqual([
+				routerRequirement,
+				endpointRequirement,
+				null,
+			]);
+		});
+
+		it('inherits server requirements without router override', async () => {
+			class TestEndpoint extends BaseApiEndpoint {
+				async handle() {
+					return {};
+				}
+			}
+
+			class TestRouter extends BaseApiRouter {
+				protected async routes() {
+					return [TestEndpoint];
+				}
+			}
+
+			const router = new TestRouter();
+			router.container.register(AUTHORIZATION_KEY, serverAuthorizer);
+			router.container.register(
+				AUTHORIZATION_REQUIREMENT_KEY,
+				routerRequirement
+			);
+			await router.register(ExpressRouter(), '');
+
+			const requirement =
+				router.registeredRoutes[0]
+					.getEffectiveAuthorizationRequirement();
+			expect(requirement).toEqual(routerRequirement);
 		});
 	});
 

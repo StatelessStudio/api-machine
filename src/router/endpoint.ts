@@ -1,6 +1,5 @@
 import {
 	Router as ExpressRouter,
-	Request as ExpressRequest,
 	Response as ExpressResponse,
 	NextFunction as ExpressNextFunction,
 } from 'express';
@@ -9,10 +8,17 @@ import { ObjectSanitizer } from 'valsan/object-sanitizer';
 
 import { BaseApiRoute } from './base';
 import { validateRequest } from './validation-middleware';
-import { BadRequestError, HTTPError, UnprocessableEntityError } from '../error';
+import {
+	BadRequestError,
+	ForbiddenError,
+	HTTPError,
+	UnauthorizedError,
+	UnprocessableEntityError,
+} from '../error';
 import { ArrayValSan, ObjectValSan } from 'valsan';
+import { AuthenticatedRequest } from '../authentication/authenticated-request';
 
-export type ApiRequest = ExpressRequest;
+export type ApiRequest = AuthenticatedRequest;
 export type ApiResponse = ExpressResponse;
 export type ApiNextFunction = ExpressNextFunction;
 
@@ -86,6 +92,66 @@ export abstract class BaseApiEndpoint extends BaseApiRoute {
 		const effectiveAuth = this.getEffectiveAuthentication();
 		if (effectiveAuth) {
 			endpointMiddleware.push(effectiveAuth.getMiddleware());
+		}
+
+		const authorization = this.getEffectiveAuthorizationRequirement();
+		if (authorization) {
+			const authorizer = this.getEffectiveAuthorizationService();
+			if (!authorizer) {
+				throw new Error(
+					'Authorization is configured but no authorizer is available'
+				);
+			}
+
+			endpointMiddleware.push(
+				async (
+					request: ApiRequest,
+					_response: ApiResponse,
+					next: ApiNextFunction
+				) => {
+					const principal = request.principal;
+					if (!principal) {
+						this.logAuthorization(
+							'warn', 'authorization.missing-principal', request
+						);
+						throw new UnauthorizedError(
+							'An authenticated principal is required'
+						);
+					}
+
+					let result;
+					try {
+						result = await authorizer.evaluate({
+							...authorization,
+							principal,
+						});
+					}
+					catch (error) {
+						this.logAuthorization(
+							'error', 'authorization.error', request,
+							{ ...authorization, error }
+						);
+						throw error;
+					}
+
+					if (!result.allowed) {
+						this.logAuthorization(
+							'warn', 'authorization.denied', request,
+							{ ...authorization, reason: result.reason }
+						);
+						throw new ForbiddenError(
+							result.reason || 'Authorization denied'
+						);
+					}
+
+					this.logAuthorization(
+						'info', 'authorization.allowed', request, {
+							...authorization,
+						}
+					);
+					return next();
+				}
+			);
 		}
 
 		// Register with middleware (if any) before the handler

@@ -1,6 +1,17 @@
 import { Router as ExpressRouter, RequestHandler } from 'express';
 import { AuthenticationScheme } from '../authentication/authentication-scheme';
 import { DependencyContainer } from 'hidi';
+import { AuthenticatedRequest } from '../authentication/authenticated-request';
+import {
+	ApiAuthorizationService,
+	AuthorizationRequirement,
+} from '../authorization';
+import { LogInterface } from '../log';
+
+export const AUTHENTICATION_KEY = 'api-machine.authn';
+export const AUTHORIZATION_KEY = 'api-machine.authz';
+export const AUTHORIZATION_REQUIREMENT_KEY =
+	'api-machine.authorization-requirement';
 
 export abstract class BaseApiRoute {
 	public path: string;
@@ -25,6 +36,8 @@ export abstract class BaseApiRoute {
 	 * If undefined, inherits from parent router or server
 	 */
 	public authentication?: AuthenticationScheme | null;
+	public authorizer?: ApiAuthorizationService | null;
+	public authorization?: AuthorizationRequirement | null;
 
 	/**
 	 * Parent route in the hierarchy (used for authentication cascading)
@@ -38,7 +51,18 @@ export abstract class BaseApiRoute {
 		_parentPath: string
 	): Promise<void> {
 		if (this.authentication !== undefined) {
-			this.container.register('auth', this.authentication);
+			this.container.register(AUTHENTICATION_KEY, this.authentication);
+		}
+
+		if (this.authorizer !== undefined) {
+			this.container.register(AUTHORIZATION_KEY, this.authorizer);
+		}
+
+		if (this.authorization !== undefined) {
+			this.container.register(
+				AUTHORIZATION_REQUIREMENT_KEY,
+				this.authorization
+			);
 		}
 
 		this.inject();
@@ -73,10 +97,50 @@ export abstract class BaseApiRoute {
 	 * @returns The authentication scheme to use, or undefined if public
 	 */
 	public getEffectiveAuthentication():
-		| AuthenticationScheme
-		| undefined
-		| null {
-		return this.container.get('auth');
+		AuthenticationScheme | undefined | null {
+		const authentication = this.container.get<AuthenticationScheme | null>(
+			AUTHENTICATION_KEY
+		);
+
+		if (authentication !== undefined) {
+			return authentication;
+		}
+
+		const legacy = this.container.get<unknown>('auth');
+		if (legacy instanceof AuthenticationScheme) {
+			return legacy;
+		}
+
+		return undefined;
+	}
+
+	public getEffectiveAuthorizationService():
+		ApiAuthorizationService | undefined | null {
+		return this.container.get(AUTHORIZATION_KEY);
+	}
+
+	public getEffectiveAuthorizationRequirement():
+		AuthorizationRequirement | undefined | null {
+		return this.container.get(AUTHORIZATION_REQUIREMENT_KEY);
+	}
+
+	public logAuthorization(
+		level: 'info' | 'warn' | 'error',
+		event: string,
+		request: AuthenticatedRequest,
+		context: Record<string, unknown> = {}
+	): void {
+		const logger = this.container.get<LogInterface>('log');
+
+		if (logger) {
+			logger[level](event, {
+				...context,
+				principalId: request.principal?.id,
+				method: request.method,
+				path: request.originalUrl,
+				requestId: request.headers?.['x-request-id'],
+			});
+		}
 	}
 }
 

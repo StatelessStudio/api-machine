@@ -19,7 +19,8 @@ class SecureEndpoint extends BaseApiEndpoint {
 class ApiRouter extends BaseApiRouter {
   override path = '/api';
   override authentication = new BearerAuthenticationScheme({
-    checkToken: async (token: string) => token === 'secret-token',
+    checkToken: async (token: string) =>
+      token === 'secret-token' ? { id: 'router-user' } : false,
     schemeName: 'BearerAuth',
   });
   
@@ -31,7 +32,8 @@ class ApiRouter extends BaseApiRouter {
 const server = new RestServer({
   port: 4000,
   authentication: new BearerAuthenticationScheme({
-    checkToken: async (token: string) => token === 'server-token',
+    checkToken: async (token: string) =>
+      token === 'server-token' ? { id: 'server-user' } : false,
   }),
 });
 ```
@@ -67,6 +69,10 @@ Authentication follows a priority hierarchy:
 - **Server-level** authentication applies as the default fallback
 - Set `authentication = null` to make a route explicitly public
 
+Authorization requirements also inherit from the nearest router or endpoint. A
+public endpoint inside an authorization-protected router must explicitly set
+both `authentication = null` and `authorization = null`.
+
 ```typescript
 class PublicRouter extends BaseApiRouter {
   override path = '/public';
@@ -80,7 +86,8 @@ class PublicRouter extends BaseApiRouter {
 class AdminEndpoint extends BaseApiEndpoint {
   override path = '/admin';
   override authentication = new BearerAuthenticationScheme({
-    checkToken: async (token) => token === 'admin-token',
+    checkToken: async (token) =>
+      token === 'admin-token' ? { id: 'admin-user' } : false,
   });
   
   async handle() {
@@ -101,7 +108,8 @@ import { BearerAuthenticationScheme } from 'api-machine';
 const auth = new BearerAuthenticationScheme({
   checkToken: async (token: string) => {
     // Validate token (check database, JWT, etc.)
-    return token === 'valid-token';
+    if (token !== 'valid-token') return false;
+    return { id: 'user-123' };
   },
   schemeName: 'BearerAuth',      // Optional: OpenAPI scheme name
   bearerFormat: 'JWT',            // Optional: Token format
@@ -115,6 +123,9 @@ const auth = new BearerAuthenticationScheme({
 - Validates token using `checkToken()` 
 - Returns 401 Unauthorized if token missing or invalid
 - Sets `request.authenticated = true` on successful validation
+- If `checkToken()` returns a principal object, attaches it to `request.principal`
+
+Return a trusted `{ id: string }` principal when routes use authorization. Return `false` to reject.
 
 **Architecture:**
 - Extends `InlineAuthenticationScheme` for stateless credential-based auth
@@ -129,12 +140,18 @@ Apply authentication to all endpoints by default:
 const server = new RestServer({
   port: 4000,
   authentication: new BearerAuthenticationScheme({
-    checkToken: async (token) => await validateToken(token),
+    checkToken: async (token) =>
+      token === 'valid-token' ? await findPrincipalForToken(token) : false,
   }),
 });
 ```
 
 All endpoints will require authentication unless a router or endpoint overrides it with `authentication = null`.
+
+For deployments that must not start with an unintentionally anonymous endpoint,
+set `requireAuthentication: true`. Startup then fails if any endpoint has no
+effective scheme; an explicit `authentication = null` remains an intentional
+public exception. This option defaults to `false` for backward compatibility.
 
 ## Router-Level Authentication
 
@@ -144,7 +161,8 @@ Apply authentication to all endpoints in a router:
 class SecureRouter extends BaseApiRouter {
   override path = '/secure';
   override authentication = new BearerAuthenticationScheme({
-    checkToken: async (token) => token === 'router-token',
+    checkToken: async (token) =>
+      token === 'router-token' ? { id: 'router-user' } : false,
   });
   
   async routes() {
@@ -161,7 +179,8 @@ Override parent authentication for specific endpoints:
 class AdminEndpoint extends BaseApiEndpoint {
   override path = '/admin';
   override authentication = new BearerAuthenticationScheme({
-    checkToken: async (token) => token === 'admin-token',
+    checkToken: async (token) =>
+      token === 'admin-token' ? { id: 'admin-user' } : false,
     schemeName: 'AdminAuth',
   });
   
@@ -170,6 +189,63 @@ class AdminEndpoint extends BaseApiEndpoint {
   }
 }
 ```
+
+## Authorization
+
+Configure an authorizer at the server and declare requirements on protected endpoints. The authorizer is inherited through the Hidi container tree; endpoint or router `authorizer` values override inherited providers. A route requirement is separate from the service and is evaluated only when declared.
+
+```typescript
+import {
+  ApiRequest,
+  BaseApiEndpoint,
+  BaseApiRouter,
+  BearerAuthenticationScheme,
+  RestServer,
+} from 'api-machine';
+
+class ReportsEndpoint extends BaseApiEndpoint {
+  override path = '/reports';
+  override authorization = { action: 'read', resource: 'reports' };
+
+  async handle(request: ApiRequest) {
+    return { principal: request.principal };
+  }
+}
+
+class ReportsRouter extends BaseApiRouter {
+  async routes() {
+    return [ReportsEndpoint];
+  }
+}
+
+class ReportsServer extends RestServer {
+  override router = ReportsRouter;
+
+  constructor() {
+    super({
+      port: 4000,
+      authentication: new BearerAuthenticationScheme({
+        checkToken: async (token) =>
+          token === 'valid-token' ? { id: 'user-123' } : false,
+      }),
+      authorizer: {
+        async evaluate({ principal, action, resource }) {
+          return {
+            allowed:
+              principal.id === 'user-123' &&
+              action === 'read' &&
+              resource === 'reports',
+          };
+        },
+      },
+    });
+  }
+}
+
+const server = new ReportsServer();
+```
+
+Unauthenticated requests receive `401`; authenticated requests denied by the policy receive `403`. Set `authentication = null` on a router or endpoint to explicitly make it public. A route with an authorization requirement still needs a trusted principal, even if authentication was opted out; otherwise it receives `401`.
 
 ## Inline Authentication Schemes
 
@@ -232,11 +308,14 @@ throwIfAuthenticationBlocked(result);
 ```
 
 ```typescript
-import { InlineAuthenticationScheme } from 'api-machine';
+import { InlineAuthenticationScheme, UnauthorizedError } from 'api-machine';
 import { ApiRequest } from 'api-machine';
 
 class ApiKeyScheme extends InlineAuthenticationScheme {
-  constructor(private apiKey: string) {
+  constructor(
+    private apiKey: string,
+    private principal: { id: string },
+  ) {
     super();
   }
   
@@ -259,10 +338,12 @@ class ApiKeyScheme extends InlineAuthenticationScheme {
   async authenticate(options: {
     credentials: string;
     request: ApiRequest;
-  }): Promise<void> {
+  }): Promise<{ id: string }> {
     if (options.credentials !== this.apiKey) {
       throw new UnauthorizedError('Invalid API key');
     }
+  
+    return this.principal;
   }
 }
 ```
@@ -276,7 +357,7 @@ class ApiKeyScheme extends InlineAuthenticationScheme {
 2. User goes through the auth flow to obtain a session
 3. Session ID is stored (typically in cookies or request state)
 4. On each subsequent request, middleware calls `checkSession()` to verify the session exists and is valid
-5. Only after session is verified, the request continues
+5. Middleware attaches the stored `session.principal`, if present, before the request continues. Authorization requires that trusted identity.
 
 **Key Methods:**
 - `getAuthFlow()` - Define the authentication flow steps used to obtain a session
@@ -366,8 +447,18 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
 After a session is obtained through the auth flow, each request:
 1. Extracts the session ID (from cookies, headers, etc.)
 2. Calls `checkSession()` to verify the session still exists
-3. Validates the session is not expired
-4. Sets `request.authenticated = true` and allows request to continue
+3. Applies the session driver's validation policy. Expiry and principal revocation are application/driver responsibilities.
+4. Sets `request.authenticated = true`, attaches `session.principal` when present, and allows the request to continue
+
+Create sessions from the principal returned by trusted authentication:
+
+```typescript
+sessionDriver.createSession({ id: sessionId, principal });
+```
+
+The built-in `InMemorySessionDriver` is demonstration-only: it checks existence,
+not expiry or principal deactivation. Its cookie lifetime is not server-side
+revocation. Use a production session driver with an explicit lifecycle policy.
 
 ## AuthFlow & BaseApiEndpoint
 
@@ -415,14 +506,14 @@ Make routes explicitly public by setting `authentication = null`:
 class PublicEndpoint extends BaseApiEndpoint {
   override path = '/public';
   override authentication = null;  // No authentication required
+  override authorization = null;   // No inherited policy requirement
   
   async handle() {
     return { public: true };
   }
 }
 ```
-
-This bypasses any parent router or server authentication.
+Note: Set both `authentication` and `authorization` to null if you would like to override both. Clearing authentication alone does not clear an inherited authorization requirement.
 
 ## Custom Authentication Schemes
 
@@ -431,7 +522,7 @@ Create custom authentication by extending `InlineAuthenticationScheme` or `Sessi
 **For credential-based auth** (API keys, tokens):
 
 ```typescript
-import { InlineAuthenticationScheme } from 'api-machine';
+import { InlineAuthenticationScheme, UnauthorizedError } from 'api-machine';
 import { ApiRequest } from 'api-machine';
 
 class CustomKeyScheme extends InlineAuthenticationScheme {
@@ -450,10 +541,12 @@ class CustomKeyScheme extends InlineAuthenticationScheme {
   async authenticate(options: {
     credentials: string;
     request: ApiRequest;
-  }): Promise<void> {
+  }): Promise<{ id: string }> {
     if (!await this.validateKey(options.credentials)) {
       throw new UnauthorizedError('Invalid key');
     }
+
+    return { id: 'demo-api-client' };
   }
   
   private async validateKey(key: string): Promise<boolean> {
@@ -478,7 +571,8 @@ The authentication module exports the following. See [src/authentication/index.t
 - `BaseApiEndpoint` - Base class for auth flow steps
 - `AuthFlow` - Type for collections of steps
 - `BearerAuthenticationScheme` - Built-in Bearer token scheme
-- `AuthenticatedRequest` - Request type with auth flag
+- `AuthenticatedPrincipal` - Trusted identity with at least a string ID
+- `AuthenticatedRequest` - Request type with auth flag and optional principal
 
 ## OpenAPI Integration
 
@@ -486,7 +580,8 @@ Authentication schemes automatically generate OpenAPI security definitions:
 
 ```typescript
 const bearerAuth = new BearerAuthenticationScheme({
-  checkToken: async (token) => await validate(token),
+  checkToken: async (token) =>
+    token === 'valid-token' ? await findPrincipalForToken(token) : false,
   schemeName: 'BearerAuth',
   description: 'JWT Bearer Authentication',
 });
@@ -513,7 +608,7 @@ const oauth2Auth = new OAuth2Scheme();
 
 4. **Use server-level auth as default** - Apply authentication at the server level and override only where needed
 
-5. **Make public routes explicit** - Use `authentication = null` to clearly mark public endpoints
+5. **Make public routes explicit** - Clear both authentication and inherited authorization requirements with `authentication = null` and `authorization = null`
 
 6. **Validate thoroughly:**
    - For inline: validate credentials against secure sources (database, JWT verification)
