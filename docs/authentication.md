@@ -125,6 +125,8 @@ const auth = new BearerAuthenticationScheme({
 - Sets `request.authenticated = true` on successful validation
 - If `checkToken()` returns a principal object, attaches it to `request.principal`
 
+Return a trusted `{ id: string }` principal when routes use authorization. Return `false` to reject.
+
 **Architecture:**
 - Extends `InlineAuthenticationScheme` for stateless credential-based auth
 - `getCredentials()` - Extracts Bearer token from Authorization header on each request
@@ -306,11 +308,14 @@ throwIfAuthenticationBlocked(result);
 ```
 
 ```typescript
-import { InlineAuthenticationScheme } from 'api-machine';
+import { InlineAuthenticationScheme, UnauthorizedError } from 'api-machine';
 import { ApiRequest } from 'api-machine';
 
 class ApiKeyScheme extends InlineAuthenticationScheme {
-  constructor(private apiKey: string) {
+  constructor(
+    private apiKey: string,
+    private principal: { id: string },
+  ) {
     super();
   }
   
@@ -333,10 +338,12 @@ class ApiKeyScheme extends InlineAuthenticationScheme {
   async authenticate(options: {
     credentials: string;
     request: ApiRequest;
-  }): Promise<void> {
+  }): Promise<{ id: string }> {
     if (options.credentials !== this.apiKey) {
       throw new UnauthorizedError('Invalid API key');
     }
+  
+    return this.principal;
   }
 }
 ```
@@ -350,7 +357,7 @@ class ApiKeyScheme extends InlineAuthenticationScheme {
 2. User goes through the auth flow to obtain a session
 3. Session ID is stored (typically in cookies or request state)
 4. On each subsequent request, middleware calls `checkSession()` to verify the session exists and is valid
-5. Only after session is verified, the request continues
+5. Middleware attaches the stored `session.principal`, if present, before the request continues. Authorization requires that trusted identity.
 
 **Key Methods:**
 - `getAuthFlow()` - Define the authentication flow steps used to obtain a session
@@ -440,8 +447,18 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
 After a session is obtained through the auth flow, each request:
 1. Extracts the session ID (from cookies, headers, etc.)
 2. Calls `checkSession()` to verify the session still exists
-3. Validates the session is not expired
-4. Sets `request.authenticated = true` and allows request to continue
+3. Applies the session driver's validation policy. Expiry and principal revocation are application/driver responsibilities.
+4. Sets `request.authenticated = true`, attaches `session.principal` when present, and allows the request to continue
+
+Create sessions from the principal returned by trusted authentication:
+
+```typescript
+sessionDriver.createSession({ id: sessionId, principal });
+```
+
+The built-in `InMemorySessionDriver` is demonstration-only: it checks existence,
+not expiry or principal deactivation. Its cookie lifetime is not server-side
+revocation. Use a production session driver with an explicit lifecycle policy.
 
 ## AuthFlow & BaseApiEndpoint
 
@@ -489,14 +506,14 @@ Make routes explicitly public by setting `authentication = null`:
 class PublicEndpoint extends BaseApiEndpoint {
   override path = '/public';
   override authentication = null;  // No authentication required
+  override authorization = null;   // No inherited policy requirement
   
   async handle() {
     return { public: true };
   }
 }
 ```
-
-This bypasses any parent router or server authentication.
+Note: Set both `authentication` and `authorization` to null if you would like to override both. Clearing authentication alone does not clear an inherited authorization requirement.
 
 ## Custom Authentication Schemes
 
@@ -505,7 +522,7 @@ Create custom authentication by extending `InlineAuthenticationScheme` or `Sessi
 **For credential-based auth** (API keys, tokens):
 
 ```typescript
-import { InlineAuthenticationScheme } from 'api-machine';
+import { InlineAuthenticationScheme, UnauthorizedError } from 'api-machine';
 import { ApiRequest } from 'api-machine';
 
 class CustomKeyScheme extends InlineAuthenticationScheme {
@@ -524,10 +541,12 @@ class CustomKeyScheme extends InlineAuthenticationScheme {
   async authenticate(options: {
     credentials: string;
     request: ApiRequest;
-  }): Promise<void> {
+  }): Promise<{ id: string }> {
     if (!await this.validateKey(options.credentials)) {
       throw new UnauthorizedError('Invalid key');
     }
+
+    return { id: 'demo-api-client' };
   }
   
   private async validateKey(key: string): Promise<boolean> {
@@ -552,7 +571,8 @@ The authentication module exports the following. See [src/authentication/index.t
 - `BaseApiEndpoint` - Base class for auth flow steps
 - `AuthFlow` - Type for collections of steps
 - `BearerAuthenticationScheme` - Built-in Bearer token scheme
-- `AuthenticatedRequest` - Request type with auth flag
+- `AuthenticatedPrincipal` - Trusted identity with at least a string ID
+- `AuthenticatedRequest` - Request type with auth flag and optional principal
 
 ## OpenAPI Integration
 
@@ -588,7 +608,7 @@ const oauth2Auth = new OAuth2Scheme();
 
 4. **Use server-level auth as default** - Apply authentication at the server level and override only where needed
 
-5. **Make public routes explicit** - Use `authentication = null` to clearly mark public endpoints
+5. **Make public routes explicit** - Clear both authentication and inherited authorization requirements with `authentication = null` and `authorization = null`
 
 6. **Validate thoroughly:**
    - For inline: validate credentials against secure sources (database, JWT verification)

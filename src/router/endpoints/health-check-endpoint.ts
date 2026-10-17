@@ -8,6 +8,8 @@ import { GetEndpoint } from './get-endpoint';
 
 export class HealthCheckEndpoint extends GetEndpoint {
 	override path = '/health';
+	// override authentication = null;
+	// override authorization = null;
 
 	override responseExample = {
 		status: 'ok',

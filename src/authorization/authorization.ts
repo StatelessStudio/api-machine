@@ -1,4 +1,6 @@
-import { AuthenticatedPrincipal } from '../authentication/authenticated-request';
+import {
+	AuthenticatedPrincipal,
+} from '../authentication/authenticated-request';
 
 export interface AuthorizationRequirement {
 	action: string;

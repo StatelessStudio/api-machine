@@ -11,7 +11,6 @@ import {
 	BearerAuthenticationScheme,
 	ApiRequest,
 	ApiResponse,
-	AuthenticatedRequest,
 } from '../../../src/index';
 
 /**
@@ -48,7 +47,7 @@ export class BearerProtectedEndpoint extends BaseApiEndpoint {
 	async handle(request: ApiRequest, response: ApiResponse) {
 		return {
 			message: 'You accessed a protected resource',
-			principal: (request as AuthenticatedRequest).principal,
+			principal: request.principal,
 			timestamp: new Date().toISOString(),
 		};
 	}
@@ -61,6 +60,7 @@ export class BearerPublicEndpoint extends BaseApiEndpoint {
 	override path = '/public';
 	override description = 'Public resource (no authentication)';
 	override authentication = null;
+	override authorization = null;
 
 	async handle(request: ApiRequest, response: ApiResponse) {
 		return {
