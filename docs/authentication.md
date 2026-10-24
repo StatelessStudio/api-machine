@@ -65,24 +65,14 @@ Authentication follows a priority hierarchy:
 **Endpoint → Router → Server**
 
 Authentication resolves only through the namespaced `api-machine.authn` key.
-The nearest dependency container wins, including registrations made in
-`inject()`. An explicit `null` under this key stops inheritance and makes the
-route public.
 
-**Migration for API Machine 2:** Legacy `auth` registrations are no longer
-used for authentication. Replace them with the exported `AUTHENTICATION_KEY`
-from `api-machine/router`, or set the route's `authentication` property.
-Legacy registrations do not protect a route or satisfy
-`requireAuthentication` coverage checks.
+The nearest dependency container wins, including registrations made in `inject()`. An explicit `null` under this key stops inheritance and makes the route public.
 
 - **Endpoint-level** authentication has highest priority
 - **Router-level** authentication applies if endpoint doesn't specify
 - **Server-level** authentication applies as the default fallback
-- Set `authentication = null` to make a route explicitly public
 
-Authorization requirements also inherit from the nearest router or endpoint. A
-public endpoint inside an authorization-protected router must explicitly set
-both `authentication = null` and `authorization = null`.
+A public endpoint inside an authorization-protected router must explicitly set both `authentication = null` and `authorization = null`.
 
 ```typescript
 class PublicRouter extends BaseApiRouter {
@@ -159,10 +149,7 @@ const server = new RestServer({
 
 All endpoints will require authentication unless a router or endpoint overrides it with `authentication = null`.
 
-For deployments that must not start with an unintentionally anonymous endpoint,
-set `requireAuthentication: true`. Startup then fails if any endpoint has no
-effective scheme; an explicit `authentication = null` remains an intentional
-public exception. This option defaults to `false` for backward compatibility.
+For deployments that must not start with an unintentionally anonymous endpoint, set `requireAuthentication: true`. Startup then fails if any endpoint has no effective scheme; an explicit `authentication = null` remains an intentional public exception. This option defaults to `false` for backward compatibility.
 
 ## Router-Level Authentication
 
@@ -467,9 +454,7 @@ Create sessions from the principal returned by trusted authentication:
 sessionDriver.createSession({ id: sessionId, principal });
 ```
 
-The built-in `InMemorySessionDriver` is demonstration-only: it checks existence,
-not expiry or principal deactivation. Its cookie lifetime is not server-side
-revocation. Use a production session driver with an explicit lifecycle policy.
+The built-in `InMemorySessionDriver` is demonstration-only: it checks existence, not expiry or principal deactivation. Its cookie lifetime is not server-side revocation. Use a production session driver with an explicit lifecycle policy.
 
 ## AuthFlow & BaseApiEndpoint
 
