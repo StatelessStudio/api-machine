@@ -12,7 +12,10 @@ import {
 	AuthenticatedRequest,
 } from '../../../src';
 import { RequestHandler } from 'express';
-import { UnauthorizedError } from '../../../src/error';
+import {
+	TooManyRequestsError,
+	UnauthorizedError,
+} from '../../../src/error';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyResponse = any;
@@ -52,14 +55,17 @@ class TestInlineScheme extends InlineAuthenticationScheme {
 
 describe('AuthenticationScheme (Base Class)', () => {
 	describe('Authentication protection adapter', () => {
-		it('should convert a blocked auth attempt into a 429 error', () => {
+		it('allows attempts when protection permits them', () => {
 			expect(() =>
 				throwIfAuthenticationBlocked({
-					allowed: false,
+					allowed: true,
 					retryAfterSeconds: 45,
 				})
-			).toThrow();
+			).not.toThrow();
+		});
 
+		it('should convert a blocked auth attempt into a 429 error', () => {
+			let error: TooManyRequestsError | undefined;
 			try {
 				throwIfAuthenticationBlocked({
 					allowed: false,
@@ -67,12 +73,32 @@ describe('AuthenticationScheme (Base Class)', () => {
 				});
 				fail('Expected a TooManyRequestsError');
 			}
-			catch (error) {
-				const err = error as Error;
-				expect(err.name).toBe('TooManyRequestsError');
-				expect(err.message).toBe(
-					'Authentication temporarily unavailable'
-				);
+			catch (caught) {
+				expect(caught).toBeInstanceOf(TooManyRequestsError);
+				error = caught as TooManyRequestsError;
+			}
+
+			expect(error?.message).toBe(
+				'Authentication temporarily unavailable'
+			);
+			expect(error?.headers['Retry-After']).toBe('45');
+		});
+
+		it('should omit Retry-After when no positive delay is provided', () => {
+			for (const retryAfterSeconds of [undefined, 0, -1]) {
+				let error: TooManyRequestsError | undefined;
+				try {
+					throwIfAuthenticationBlocked({
+						allowed: false,
+						retryAfterSeconds,
+					});
+				}
+				catch (caught) {
+					expect(caught).toBeInstanceOf(TooManyRequestsError);
+					error = caught as TooManyRequestsError;
+				}
+
+				expect(error?.headers['Retry-After']).toBeUndefined();
 			}
 		});
 	});

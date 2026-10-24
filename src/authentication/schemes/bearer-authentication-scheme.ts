@@ -7,11 +7,14 @@ import { UnauthorizedError } from '../../error';
 import { BearerTokenValSan } from 'valsan/primitives';
 import { LogInterface } from '../../log';
 import { ApiRequest } from '../../router';
+import { AuthenticatedPrincipal } from '../authenticated-request';
 
-export type CheckTokenFunction = (token: string) => Promise<boolean>;
+export type CheckTokenFunction = (
+	token: string
+) => Promise<boolean | AuthenticatedPrincipal>;
 
-// eslint-disable-next-line max-len
-export interface BearerAuthenticationSchemeOptions extends AuthenticationSchemeOptions {
+export interface BearerAuthenticationSchemeOptions
+	extends AuthenticationSchemeOptions {
 	/**
 	 * The name of the security scheme in OpenAPI
 	 * @default 'BearerAuth'
@@ -32,8 +35,8 @@ export interface BearerAuthenticationSchemeOptions extends AuthenticationSchemeO
 	description?: string;
 
 	/**
-	 * Function to validate the bearer token
-	 * Should return true if the token is valid, false otherwise
+	 * Validate a bearer token and optionally return the authenticated
+	 * principal.
 	 */
 	checkToken: CheckTokenFunction;
 
@@ -102,7 +105,7 @@ export class BearerAuthenticationScheme extends InlineAuthenticationScheme {
 	public override async authenticate(options: {
 		credentials: string;
 		request: ApiRequest;
-	}): Promise<void> {
+	}): Promise<void | AuthenticatedPrincipal> {
 		const { credentials, request } = options;
 
 		if (!credentials) {
@@ -127,7 +130,8 @@ export class BearerAuthenticationScheme extends InlineAuthenticationScheme {
 			});
 		}
 
-		if (!(await this.checkToken(validationResult.data))) {
+		const tokenResult = await this.checkToken(validationResult.data);
+		if (!tokenResult) {
 			// eslint-disable-next-line max-len
 			const msg =
 				'Unauthorized access attempt from ' +
@@ -139,5 +143,7 @@ export class BearerAuthenticationScheme extends InlineAuthenticationScheme {
 				scheme: 'Bearer',
 			});
 		}
+
+		return typeof tokenResult === 'object' ? tokenResult : undefined;
 	}
 }

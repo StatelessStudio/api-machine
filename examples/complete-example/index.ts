@@ -43,6 +43,16 @@ const server = new MyServer({
 	maxPayloadSizeMB: 10,
 	log: customLogger,
 	swaggerEnabled: true,
+	authorizer: {
+		async evaluate({ principal, action, resource }) {
+			return {
+				allowed:
+					(action === 'read' && resource === 'demo' &&
+						principal.id === 'demo-user') ||
+					principal.id === 'admin-user',
+			};
+		},
+	},
 });
 
 server

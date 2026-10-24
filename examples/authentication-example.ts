@@ -70,7 +70,8 @@ class SuperAdminEndpoint extends BaseApiEndpoint {
 	// Endpoint-level override for super admin
 	override authentication = new BearerAuthenticationScheme({
 		checkToken: async (token: string) => {
-			return token === 'super-admin-token-789';
+			return token === 'super-admin-token-789'
+				? { id: 'super-admin-user' } : false;
 		},
 		schemeName: 'SuperAdminAuth',
 		bearerFormat: 'JWT',
@@ -93,7 +94,8 @@ class AdminRouter extends BaseApiRouter {
 	override authentication = new BearerAuthenticationScheme({
 		checkToken: async (token: string) => {
 			// Admin token validation
-			return token === 'admin-token-456';
+			return token === 'admin-token-456'
+				? { id: 'admin-user' } : false;
 		},
 		schemeName: 'AdminAuth',
 		bearerFormat: 'JWT',
@@ -127,7 +129,8 @@ class AuthenticatedServer extends RestServer {
 			authentication: new BearerAuthenticationScheme({
 				checkToken: async (token: string) => {
 					// In real app, validate against database/JWT
-					return token === 'valid-token-123';
+					return token === 'valid-token-123'
+						? { id: 'user-123' } : false;
 				},
 				bearerFormat: 'JWT',
 				description: 'JWT Bearer token authentication',

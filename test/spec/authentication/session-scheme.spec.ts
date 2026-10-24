@@ -143,6 +143,74 @@ describe('SessionAuthenticationScheme', () => {
 			expect(next).toHaveBeenCalled();
 		});
 
+		it('reads a principal from the validated session cookie', async () => {
+			const scheme = new TestSessionScheme();
+			const driver = new TestableSessionDriver();
+			const principal = { id: 'principal-123' };
+			driver.createSession({ id: 'session-123', principal });
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(scheme as any).sessionDriver = driver;
+
+			const request = {
+				headers: { cookie: 'other=value; sessionId=session-123' },
+			} as AnyRequest;
+			const next = jasmine.createSpy('next');
+
+			await scheme.getMiddleware()(request, {} as AnyResponse, next);
+
+			expect(request.authenticated).toBe(true);
+			expect(request.principal).toEqual(principal);
+			expect(next).toHaveBeenCalled();
+		});
+
+		it('rejects session cookies without an ID', async () => {
+			const scheme = new TestSessionScheme();
+			const driver = new TestableSessionDriver();
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(scheme as any).sessionDriver = driver;
+
+			const request = {
+				headers: { cookie: 'other=value' },
+			} as AnyRequest;
+			const next = jasmine.createSpy('next');
+
+			try {
+				await scheme.getMiddleware()(request, {} as AnyResponse, next);
+				fail('Should have thrown UnauthorizedError');
+			}
+			catch (error) {
+				expect(error).toBeInstanceOf(UnauthorizedError);
+				expect((error as UnauthorizedError).message).toBe(
+					'No session ID provided'
+				);
+				expect(next).not.toHaveBeenCalled();
+			}
+		});
+
+		it('should reject a malformed session ID cookie', async () => {
+			const scheme = new TestSessionScheme();
+			const driver = new TestableSessionDriver();
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(scheme as any).sessionDriver = driver;
+
+			const request = {
+				headers: { cookie: 'sessionId=%E0%A4%A' },
+			} as AnyRequest;
+			const next = jasmine.createSpy('next');
+
+			try {
+				await scheme.getMiddleware()(request, {} as AnyResponse, next);
+				fail('Should have thrown UnauthorizedError');
+			}
+			catch (error) {
+				expect(error).toBeInstanceOf(UnauthorizedError);
+				expect((error as UnauthorizedError).message).toBe(
+					'No session ID provided'
+				);
+				expect(next).not.toHaveBeenCalled();
+			}
+		});
+
 		it('should pass request to checkSession', async () => {
 			const scheme = new TestSessionScheme();
 			const driver = new TestableSessionDriver();

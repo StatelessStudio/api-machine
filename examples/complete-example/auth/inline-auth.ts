@@ -20,8 +20,13 @@ import {
 export const bearerAuth = new BearerAuthenticationScheme({
 	checkToken: async (token: string) => {
 		// In production: validate JWT signature, check expiration, etc.
-		const validTokens = ['demo-token', 'admin-token', 'user-token'];
-		return validTokens.includes(token);
+		const principals = new Map([
+			['demo-token', { id: 'demo-user' }],
+			['admin-token', { id: 'admin-user' }],
+			['user-token', { id: 'user' }],
+		]);
+
+		return principals.get(token) ?? false;
 	},
 	schemeName: 'BearerAuth',
 	bearerFormat: 'JWT',
@@ -34,10 +39,15 @@ export const bearerAuth = new BearerAuthenticationScheme({
 export class BearerProtectedEndpoint extends BaseApiEndpoint {
 	override path = '/protected';
 	override description = 'Protected resource requiring Bearer token';
+	override authorization = {
+		action: 'read',
+		resource: 'demo',
+	};
 
 	async handle(request: ApiRequest, response: ApiResponse) {
 		return {
 			message: 'You accessed a protected resource',
+			principal: request.principal,
 			timestamp: new Date().toISOString(),
 		};
 	}
@@ -50,6 +60,7 @@ export class BearerPublicEndpoint extends BaseApiEndpoint {
 	override path = '/public';
 	override description = 'Public resource (no authentication)';
 	override authentication = null;
+	override authorization = null;
 
 	async handle(request: ApiRequest, response: ApiResponse) {
 		return {

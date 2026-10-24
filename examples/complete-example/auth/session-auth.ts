@@ -157,13 +157,8 @@ class OAuth2Scheme extends SessionAuthenticationScheme {
 				// Create session in the driver
 				sessionDriver.createSession({
 					id: sessionId,
-					username: storedCode.username,
-					createdAt: new Date(),
-					expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-					// TODO: Fix session type
-					// eslint-disable-next-line max-len
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				} as any);
+					principal: { id: storedCode.username },
+				});
 
 				response.cookie('sessionId', sessionId, {
 					httpOnly: true,
@@ -204,6 +199,7 @@ export class SessionProtectedEndpoint extends BaseApiEndpoint {
 	async handle(request: ApiRequest, response: ApiResponse) {
 		return {
 			message: 'You accessed a session-protected resource',
+			principal: request.principal,
 			timestamp: new Date().toISOString(),
 		};
 	}
