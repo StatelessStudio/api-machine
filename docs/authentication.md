@@ -64,12 +64,16 @@ Authentication follows a priority hierarchy:
 
 **Endpoint → Router → Server**
 
-The nearest dependency container wins when mixing the namespaced
-`api-machine.authn` key and legacy `auth` registrations, including registrations
-made in `inject()`. Within the same container, `api-machine.authn` takes
-precedence. An explicit `null` under either key stops inheritance and makes
-the route public. Legacy `auth` values that are not authentication schemes
-are ignored.
+Authentication resolves only through the namespaced `api-machine.authn` key.
+The nearest dependency container wins, including registrations made in
+`inject()`. An explicit `null` under this key stops inheritance and makes the
+route public.
+
+**Migration for API Machine 2:** Legacy `auth` registrations are no longer
+used for authentication. Replace them with the exported `AUTHENTICATION_KEY`
+from `api-machine/router`, or set the route's `authentication` property.
+Legacy registrations do not protect a route or satisfy
+`requireAuthentication` coverage checks.
 
 - **Endpoint-level** authentication has highest priority
 - **Router-level** authentication applies if endpoint doesn't specify

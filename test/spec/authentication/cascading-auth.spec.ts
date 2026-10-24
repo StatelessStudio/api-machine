@@ -51,46 +51,13 @@ describe('Authentication Cascading', () => {
 			}
 		}
 
-		for (const parentKey of [AUTHENTICATION_KEY, 'auth']) {
-			for (const localKey of [AUTHENTICATION_KEY, 'auth']) {
-				for (const local of [endpointAuth, null]) {
-					it(
-						`resolves local ${localKey} ` +
-						`before parent ${parentKey}` +
-						` (${local === null ? 'public' : 'protected'})`,
-						() => {
-							const parent = new DependencyContainer();
-							parent.registerInstance(parentKey, serverAuth);
-							const endpoint = new ResolutionEndpoint();
-							endpoint.container.setParent(parent);
-							endpoint.container.registerInstance(
-								localKey, local
-							);
-							expect(endpoint.getEffectiveAuthentication())
-								.toBe(local);
-						}
-					);
-				}
-			}
-		}
-
-		it('prefers the namespaced key only within the same container', () => {
-			const endpoint = new ResolutionEndpoint();
-			for (const legacy of [serverAuth, null]) {
-				endpoint.container.registerInstance('auth', legacy);
-				endpoint.container.registerInstance(
-					AUTHENTICATION_KEY, endpointAuth
-				);
-				expect(endpoint.getEffectiveAuthentication())
-					.toBe(endpointAuth);
-			}
-		});
-
-		it('preserves a legacy inject override in mixed-key cascading',
+		it('supports namespaced inject overrides in cascading',
 			async () => {
 				class TestEndpoint extends BaseApiEndpoint {
 					override inject() {
-						this.container.registerInstance('auth', endpointAuth);
+						this.container.registerInstance(
+							AUTHENTICATION_KEY, endpointAuth
+						);
 					}
 
 					override async handle() {
@@ -113,48 +80,42 @@ describe('Authentication Cascading', () => {
 					.toBe(endpointAuth);
 			});
 
-		it('prefers a nearer legacy parent over a namespaced ancestor', () => {
-			for (const legacy of [routerAuth, null]) {
+		it('inherits the nearest namespaced scheme or public override', () => {
+			for (const authentication of [routerAuth, null]) {
 				const ancestor = new DependencyContainer();
 				ancestor.registerInstance(AUTHENTICATION_KEY, serverAuth);
 				const parent = ancestor.extend();
-				parent.registerInstance('auth', legacy);
+				parent.registerInstance(AUTHENTICATION_KEY, authentication);
 				const endpoint = new ResolutionEndpoint();
 				endpoint.container.setParent(parent);
-				expect(endpoint.getEffectiveAuthentication()).toBe(legacy);
+				expect(endpoint.getEffectiveAuthentication())
+					.toBe(authentication);
 			}
 		});
 
-		it('ignores legacy non-auth services before inheriting authentication',
+		it('ignores legacy registrations when inheriting authentication',
 			() => {
-				const parent = new DependencyContainer();
-				parent.registerInstance(AUTHENTICATION_KEY, serverAuth);
-				const endpoint = new ResolutionEndpoint();
-				endpoint.container.setParent(parent);
-				endpoint.container.registerInstance('auth', serverAuthorizer);
-				expect(endpoint.getEffectiveAuthentication()).toBe(serverAuth);
+				for (const legacy of [endpointAuth, null, serverAuthorizer]) {
+					const parent = new DependencyContainer();
+					parent.registerInstance(AUTHENTICATION_KEY, serverAuth);
+					const endpoint = new ResolutionEndpoint();
+					endpoint.container.setParent(parent);
+					endpoint.container.registerInstance('auth', legacy);
+					expect(endpoint.getEffectiveAuthentication())
+						.toBe(serverAuth);
+				}
 			});
 
-		it('supports legacy auth registrations without authorization', () => {
-			const endpoint = new (class extends BaseApiEndpoint {
-				async handle() {
-					return {};
-				}
-			})();
-			endpoint.container.registerInstance('auth', serverAuth);
-			expect(endpoint.getEffectiveAuthentication()).toBe(serverAuth);
-			endpoint.container.registerInstance(AUTHENTICATION_KEY, null);
-			expect(endpoint.getEffectiveAuthentication()).toBeNull();
-		});
-
-		it('does not mistake a legacy authorization service for auth', () => {
-			const endpoint = new (class extends BaseApiEndpoint {
-				async handle() {
-					return {};
-				}
-			})();
-			endpoint.container.registerInstance('auth', serverAuthorizer);
-			expect(endpoint.getEffectiveAuthentication()).toBeUndefined();
+		it('ignores local and inherited legacy registrations', () => {
+			for (const legacy of [serverAuth, null, serverAuthorizer]) {
+				const parent = new DependencyContainer();
+				parent.registerInstance('auth', legacy);
+				const endpoint = new ResolutionEndpoint();
+				endpoint.container.setParent(parent);
+				expect(endpoint.getEffectiveAuthentication()).toBeUndefined();
+				endpoint.container.registerInstance('auth', legacy);
+				expect(endpoint.getEffectiveAuthentication()).toBeUndefined();
+			}
 		});
 
 		it('endpoint auth overrides router and server', async () => {
