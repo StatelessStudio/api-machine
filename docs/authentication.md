@@ -64,6 +64,13 @@ Authentication follows a priority hierarchy:
 
 **Endpoint → Router → Server**
 
+The nearest dependency container wins when mixing the namespaced
+`api-machine.authn` key and legacy `auth` registrations, including registrations
+made in `inject()`. Within the same container, `api-machine.authn` takes
+precedence. An explicit `null` under either key stops inheritance and makes
+the route public. Legacy `auth` values that are not authentication schemes
+are ignored.
+
 - **Endpoint-level** authentication has highest priority
 - **Router-level** authentication applies if endpoint doesn't specify
 - **Server-level** authentication applies as the default fallback

@@ -98,17 +98,27 @@ export abstract class BaseApiRoute {
 	 */
 	public getEffectiveAuthentication():
 		AuthenticationScheme | undefined | null {
-		const authentication = this.container.get<AuthenticationScheme | null>(
-			AUTHENTICATION_KEY
-		);
+		let container: DependencyContainer | undefined = this.container;
+		while (container) {
+			// hidi exposes no public local-registration or parent lookup.
+			if (container['dependencies'].has(AUTHENTICATION_KEY)) {
+				const authentication =
+					container.get<AuthenticationScheme | null>(
+						AUTHENTICATION_KEY
+					);
+				if (authentication !== undefined) {
+					return authentication;
+				}
+			}
 
-		if (authentication !== undefined) {
-			return authentication;
-		}
+			if (container['dependencies'].has('auth')) {
+				const legacy = container.get<unknown>('auth');
+				if (legacy === null || legacy instanceof AuthenticationScheme) {
+					return legacy;
+				}
+			}
 
-		const legacy = this.container.get<unknown>('auth');
-		if (legacy instanceof AuthenticationScheme) {
-			return legacy;
+			container = container['parent'];
 		}
 
 		return undefined;
