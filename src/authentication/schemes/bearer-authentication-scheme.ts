@@ -131,7 +131,7 @@ export class BearerAuthenticationScheme extends InlineAuthenticationScheme {
 		}
 
 		const tokenResult = await this.checkToken(validationResult.data);
-		if (tokenResult === false) {
+		if (!tokenResult) {
 			// eslint-disable-next-line max-len
 			const msg =
 				'Unauthorized access attempt from ' +
