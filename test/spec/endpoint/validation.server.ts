@@ -12,16 +12,63 @@ import {
 	ComposedValSan,
 	TrimSanitizer,
 	ObjectValSan,
+	MaxValidator,
+	UppercaseSanitizer,
+	EnumValidator,
 } from 'valsan';
 // eslint-disable-next-line max-len
 import { NameValSan } from '../../../examples/complete-example/users/name-valsan';
 import { ApiResponseData } from '../../../src/router/endpoint';
+
+class ListQueryValSan extends ObjectValSan {
+	override async run(input: Record<string, unknown> | null | undefined) {
+		const result = await super.run(input);
+		if (result.success) {
+			delete result.data['discarded'];
+		}
+		return result;
+	}
+}
 
 export class ValidationRouter extends BaseApiRouter {
 	override path = '/validation';
 
 	override async routes() {
 		return [
+			class TestListQueryEndpoint extends GetEndpoint {
+				override path = '/list-query';
+
+				override query = new ListQueryValSan({
+					allowAdditionalProperties: true,
+					schema: {
+						limit: new ComposedValSan([
+							new StringToNumberValSan(),
+							new MinValidator({ min: 1 }),
+							new MaxValidator({ max: 1000 }),
+						]),
+						offset: new ComposedValSan([
+							new StringToNumberValSan(),
+							new MinValidator({ min: 0 }),
+						]),
+						orderBy: new EnumValidator({ allowedValues: ['id'] }),
+						orderDirection: new ComposedValSan([
+							new UppercaseSanitizer(),
+							new EnumValidator({
+								allowedValues: ['ASC', 'DESC'],
+							}),
+						]),
+					},
+				});
+
+				override async handle(request: ApiRequest) {
+					const query = request.query;
+					return {
+						query,
+						repeatedQuery: request.query,
+						sameQuery: query === request.query,
+					};
+				}
+			},
 			class TestHeadersEndpoint extends PostEndpoint {
 				override path = '/headers';
 

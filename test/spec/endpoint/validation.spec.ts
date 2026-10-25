@@ -3,8 +3,66 @@ import { env } from '../../env';
 import { ValidationError } from 'valsan';
 import { ErrorResponse } from '../../../src';
 
+interface ListQueryResponse {
+	query: Record<string, unknown>;
+	repeatedQuery: Record<string, unknown>;
+	sameQuery: boolean;
+}
+
 describe('Validation', function () {
 	const baseUrl = env.API_URL + '/validation';
+
+	const listQuery = 'limit=2&offset=1&orderBy=id&orderDirection=desc';
+	const sanitizedListQuery = {
+		limit: 2,
+		offset: 1,
+		orderBy: 'id',
+		orderDirection: 'DESC',
+	};
+
+	it('should persist sanitized query values across reads', async function () {
+		const response = await fetch(baseUrl + '/list-query?' + listQuery);
+
+		expect(response.status).toBe(200);
+		const data = (await response.json()) as ListQueryResponse;
+		expect(data.query).toEqual(sanitizedListQuery);
+		expect(typeof data.query['limit']).toBe('number');
+		expect(typeof data.query['offset']).toBe('number');
+		expect(data.query['orderDirection']).toBe('DESC');
+		expect(data.repeatedQuery).toEqual(sanitizedListQuery);
+		expect(data.sameQuery).toBeTrue();
+	});
+
+	it('should not restore query properties removed by a sanitizer',
+		async function () {
+			const response = await fetch(
+				baseUrl + '/list-query?' + listQuery + '&discarded=raw'
+			);
+
+			expect(response.status).toBe(200);
+			const data = (await response.json()) as ListQueryResponse;
+			expect(data.query).toEqual(sanitizedListQuery);
+			expect(data.repeatedQuery).toEqual(sanitizedListQuery);
+			expect(data.query['discarded']).toBeUndefined();
+			expect(data.repeatedQuery['discarded']).toBeUndefined();
+		}
+	);
+
+	for (const invalid of [
+		'limit=1001&offset=1&orderBy=id&orderDirection=desc',
+		'limit=2&offset=invalid&orderBy=id&orderDirection=desc',
+		'limit=2&offset=1&orderBy=id&orderDirection=invalid',
+	]) {
+		it('should reject invalid list query: ' + invalid, async function () {
+			const response = await fetch(baseUrl + '/list-query?' + invalid);
+
+			expect(response.status).toBe(422);
+			const data = (await response.json()) as ErrorResponse;
+			expect(data.error).toBe('UnprocessableEntityError');
+			expect(data.message).toBe('Validation failed');
+			expect(data.options.details).toBeDefined();
+		});
+	}
 
 	it('should create user with valid data', async function () {
 		const response = await fetch(baseUrl + '/body', {

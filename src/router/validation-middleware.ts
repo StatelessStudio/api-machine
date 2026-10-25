@@ -52,11 +52,13 @@ export async function validateRequest(
 		const sanitized = await runSanitizer(sanitizer, request[part]);
 
 		if (part === 'query') {
-			// Mutate the query object instead of reassigning
-			Object.keys(request.query).forEach((key) => {
-				delete request.query[key];
+			// Shadow Express 5's getter, which reparses on each access.
+			Object.defineProperty(request, 'query', {
+				value: sanitized,
+				writable: true,
+				enumerable: true,
+				configurable: true,
 			});
-			Object.assign(request.query, sanitized);
 		}
 		else {
 			request[part] = sanitized;
