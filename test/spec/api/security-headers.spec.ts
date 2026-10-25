@@ -79,16 +79,15 @@ describe('Security Headers Configuration', function () {
 			expect(xssProtection).toBe('1; mode=block');
 		});
 
-		it('should NOT set HSTS by default (HTTP-safe)', async function () {
+		it('should set HSTS by default', async function () {
 			server = new SecureServer({ port: testPort });
 			await server.start();
 
 			const response = await fetch(baseUrl);
 			expect(response.status).toBe(200);
 
-			// HSTS should not be set by default (only use with HTTPS)
 			const hsts = response.headers.get('Strict-Transport-Security');
-			expect(hsts).toBeNull();
+			expect(hsts).toBe('max-age=31536000; includeSubDomains');
 		});
 	});
 
