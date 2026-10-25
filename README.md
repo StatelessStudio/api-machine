@@ -37,6 +37,20 @@ class HelloEndpoint extends BaseApiEndpoint {
 }
 ```
 
+Endpoints can also return strings or buffers for non-JSON responses. Set the
+content type on the response before returning the payload:
+
+```typescript
+class CsvEndpoint extends GetEndpoint {
+	override path = '/export.csv';
+
+	override async handle(request, response) {
+		response.type('text/csv');
+		return 'id,name\n1,Alice';
+	}
+}
+```
+
 ### 2. Routers
 
 ```typescript

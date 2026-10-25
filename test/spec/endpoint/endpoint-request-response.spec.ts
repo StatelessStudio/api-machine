@@ -223,6 +223,14 @@ describe('Request and Response Handling', function () {
 			expect(contentType).toContain('application/json');
 		});
 
+		it('should return non-JSON response data', async function () {
+			const response = await fetch(`${baseUrl}/csv`);
+
+			expect(response.status).toBe(200);
+			expect(response.headers.get('Content-Type')).toContain('text/csv');
+			expect(await response.text()).toBe('id,name\n1,Alice');
+		});
+
 		it('should set cache control headers', async function () {
 			const response = await fetch(`${baseUrl}/cacheable`);
 			expect(response.status).toBe(200);
