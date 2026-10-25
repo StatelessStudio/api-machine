@@ -31,7 +31,7 @@ export interface SecurityHeadersOptions {
 	/**
 	 * Set Strict-Transport-Security header (only use with HTTPS)
 	 * Provide max-age value or false to disable
-	 * @default false
+	 * @default 31536000
 	 */
 	hsts: number | false;
 }
@@ -62,7 +62,7 @@ export const defaultSecurityHeadersOptions: SecurityHeadersOptions = {
 	noSniff: true,
 	frameOptions: 'DENY',
 	xssProtection: true,
-	hsts: false, // Disabled by default, enable when using HTTPS
+	hsts: 31536000,
 };
 
 export const defaultRestServerOptions: RestServerOptions = {

@@ -35,7 +35,7 @@ describe('Request and Response Handling', function () {
 			);
 		});
 
-		it('should not set HSTS header by default', async function () {
+		it('should set HSTS header by default', async function () {
 			const response = await fetch(`${baseUrl}/echo`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -45,7 +45,7 @@ describe('Request and Response Handling', function () {
 			expect(response.status).toBe(201);
 			expect(
 				response.headers.get('Strict-Transport-Security')
-			).toBeNull();
+			).toBe('max-age=31536000; includeSubDomains');
 		});
 	});
 
