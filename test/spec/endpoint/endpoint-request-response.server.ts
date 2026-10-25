@@ -31,6 +31,18 @@ export class RequestResponseRouter extends BaseApiRouter {
 				}
 			},
 
+			class extends GetEndpoint {
+				override path = '/csv';
+
+				override async handle(
+					request: ApiRequest,
+					response: ApiResponse
+				) {
+					response.type('text/csv');
+					return 'id,name\n1,Alice';
+				}
+			},
+
 			// Custom response headers
 			class extends GetEndpoint {
 				override path = '/custom-headers';

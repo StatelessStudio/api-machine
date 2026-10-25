@@ -22,8 +22,7 @@ export type ApiRequest = AuthenticatedRequest;
 export type ApiResponse = ExpressResponse;
 export type ApiNextFunction = ExpressNextFunction;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ApiResponseData = { [key: string]: any } | { [key: string]: any }[];
+export type ApiResponseData = string | Buffer | object;
 
 export enum EndpointMethod {
 	GET = 'get',
